@@ -120,42 +120,6 @@ html,body{height:100%;margin:0;background:var(--red);color:var(--text);}
 .card:hover{transform:translateY(-4px);transition:transform 180ms;}
 .cat-btn:hover{opacity:0.9;}
 
-/* =============================
-   RESPONSIVIDADE
-   ============================= */
-@media (max-width: 1250px){
-  .frame{border-top-width: 60px;}
-  .brand{font-size: 20px; top:-54px;}
-  .sidebar{width:200px;}
-  .grid{grid-template-columns: repeat(2, 1fr);}
-}
-
-@media (max-width: 900px){
-  .main{flex-direction:column;}
-  .sidebar{
-    width:100%;
-    border-right:none;
-    border-bottom:12px solid #fff;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
-  .categories{flex-direction:row;flex-wrap:wrap;justify-content:center;}
-  .cat-btn{font-size:14px;}
-  .content{padding:18px;}
-  .grid{grid-template-columns: repeat(2, 1fr);}
-}
-
-@media (max-width: 480px){
-  .frame{border-top-width: 50px;}
-  .brand{font-size:18px;top:-44px;text-align:center;}
-  .sidebar{padding:12px;}
-  .grid{grid-template-columns: 1fr;}
-  .product-main{flex-direction:column;}
-  .product-right{width:100%;border-left:none;border-top:1px solid #eee;margin-top:20px;}
-}
-
-
 .gallery img {
   width: 90px;
   height: 90px;
@@ -172,4 +136,88 @@ html,body{height:100%;margin:0;background:var(--red);color:var(--text);}
 
 .gallery img.active {
   border-color: #ff6600;
+}
+
+/* === Responsividade para telas menores === */
+@media (max-width: 900px) {
+  .frame {
+    border-top-width: 50px;
+    min-height: auto;
+  }
+
+  .main {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 8px solid #fff;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .categories {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* página principal */
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding: 10px;
+  }
+
+  /* página de produto */
+  .product-main {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .product-left,
+  .product-right {
+    width: 100%;
+  }
+
+  .product-right {
+    border-left: none;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+  }
+
+  .gallery {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .gallery img {
+    width: 70px;
+    height: 60px;
+  }
+
+  .price-large {
+    font-size: 22px;
+  }
+
+  .buy-button {
+    width: 100%;
+    text-align: center;
+  }
 }
