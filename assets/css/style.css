@@ -154,3 +154,22 @@ html,body{height:100%;margin:0;background:var(--red);color:var(--text);}
   .product-main{flex-direction:column;}
   .product-right{width:100%;border-left:none;border-top:1px solid #eee;margin-top:20px;}
 }
+
+
+.gallery img {
+  width: 90px;
+  height: 90px;
+  margin: 5px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+}
+
+.gallery img:hover {
+  border-color: #ff6600;
+}
+
+.gallery img.active {
+  border-color: #ff6600;
+}
