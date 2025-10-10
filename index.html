@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1200, initial-scale=1" />
+  <title>Naut Store</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <h1 class="brand">Naut Store</h1>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <div class="searchbox">
+          <input type="text" id="searchInput" placeholder="Pesquisar..." />
+        </div>
+        <nav class="categories">
+          <button class="cat-btn active" data-cat="all">Todos</button>
+          <button class="cat-btn" data-cat="shaders">Shaders</button>
+          <button class="cat-btn" data-cat="logic">Logic</button>
+          <button class="cat-btn" data-cat="models">Models</button>
+        </nav>
+      </aside>
+
+      <section class="content">
+        <div id="grid" class="grid">
+          <article class="card" data-category="shaders">
+            <div class="card-img" style="background-image: url('assets/img/lensflare-preview.jpg')"></div>
+            <div class="card-body">
+              <h3 class="card-title">Shader: Lens Flare</h3>
+              <p class="card-desc">Efeito de lens flare avançado para Range Engine 1.6 — inclui shader e demo scene.</p>
+              <div class="card-footer">
+                <span class="price">R$ 19,90</span>
+                <a class="details" href="shader-lensflare.html">Ver</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-category="shaders">
+            <div class="card-img" style="background-image: url('assets/img/radar-preview.png')"></div>
+            <div class="card-body">
+              <h3 class="card-title">Radar Scanner GLSL</h3>
+              <p class="card-desc">Shader de radar com blips móveis e estela — pronto para integrar no seu projeto.</p>
+              <div class="card-footer">
+                <span class="price">R$ 24,90</span>
+                <a class="details" href="radar-scanner.html">Ver</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-category="models">
+            <div class="card-img" style="background-image: url('assets/img/city-preview.png')"></div>
+            <div class="card-body">
+              <h3 class="card-title">City Low-Poly Pack</h3>
+              <p class="card-desc">Conjunto de modelos low-poly para usar em cenas da Range Engine (fácil de importar).</p>
+              <div class="card-footer">
+                <span class="price">R$ 29,90</span>
+                <a class="details" href="city-pack.html">Ver</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- mais cards podem ser adicionados aqui seguindo o mesmo formato -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

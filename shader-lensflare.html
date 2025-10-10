@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1200, initial-scale=1" />
+  <title>Shader: Lens Flare — Naut Store</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <h1 class="brand">Naut Store</h1>
+    </header>
+
+    <main class="product-main">
+      <a class="back-link" href="index.html">← Voltar</a>
+
+      <section class="product-left">
+        <div class="product-media">
+          <!-- substitua pela sua demo video se tiver -->
+          <img src="assets/img/lensflare-preview.jpg" alt="Preview 1">
+        </div>
+        <div class="gallery">
+          <img src="assets/img/lensflare-preview-2.jpg" alt="preview 2">
+          <!-- adicione mais imagens se quiser -->
+        </div>
+      </section>
+
+      <aside class="product-right">
+        <h2>Shader: Lens Flare</h2>
+        <p class="long-desc">
+          Shader de lens flare otimizado para Range Engine 1.6. Inclui documentação, arquivo .glsl e cena de demonstração.
+        </p>
+
+        <div class="price-buy">
+          <div class="price-large">R$ 19,90</div>
+
+          <!-- === EXEMPLO: botão PayPal padrão ===
+               Substitua "SEU_PAYPAL_EMAIL" pelo seu e-mail do PayPal
+               Ajuste "amount" e "currency_code" conforme necessário.
+               O campo "return" indica a página para onde o comprador volta.
+               ATENÇÃO: para segurança real use IPN/Notifications do PayPal. -->
+          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+            <input type="hidden" name="cmd" value="_xclick">
+            <input type="hidden" name="business" value="SEU_PAYPAL_EMAIL">
+            <input type="hidden" name="item_name" value="Shader: Lens Flare">
+            <input type="hidden" name="amount" value="19.90">
+            <input type="hidden" name="currency_code" value="BRL">
+            <input type="hidden" name="return" value="https://SEU_USUARIO.github.io/obrigado.html">
+            <button class="buy-button" type="submit">Comprar com PayPal</button>
+          </form>
+
+        </div>
+
+        <div class="specs">
+          <h4>Conteúdo do pacote</h4>
+          <ul>
+            <li>Arquivo .glsl</li>
+            <li>Demo scene (.blend / .range)</li>
+            <li>README com instruções de integração</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>
