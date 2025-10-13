@@ -2,9 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shader: Lens Flare — Naut Store</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produto — Naut Store</title>
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <div class="frame">
@@ -13,34 +13,33 @@
     </header>
 
     <main class="product-main">
-      <a class="back-link" href="../index.html">← Voltar</a>
+      <a class="back-link" href="index.html">← Voltar</a>
 
       <section class="product-left">
         <div class="product-media">
-          <img id="mainImage" src="../assets/img/lensflare-preview.jpg" alt="Preview">
+          <!-- A imagem principal será carregada via JS -->
+          <img src="assets/img/placeholder.jpg" alt="Produto">
         </div>
         <div class="gallery">
-          <img src="../assets/img/lensflare-preview.jpg" alt="preview 1">
-          <img src="../assets/img/lensflare-preview-2.jpg" alt="preview 2">
+          <!-- Miniaturas serão injetadas dinamicamente -->
         </div>
       </section>
 
       <aside class="product-right">
-        <h2>Shader: Lens Flare</h2>
-        <p class="long-desc">
-          Shader de lens flare otimizado para Range Engine 1.6. Inclui documentação, arquivo .glsl e cena de demonstração.
-        </p>
+        <h2>Nome do Produto</h2>
+        <p class="long-desc">Descrição do produto...</p>
 
         <div class="price-buy">
-          <div class="price-large">R$ 19,90</div>
+          <div class="price-large">R$ 0,00</div>
 
+          <!-- Formulário de pagamento -->
           <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
             <input type="hidden" name="cmd" value="_xclick">
             <input type="hidden" name="business" value="SEU_PAYPAL_EMAIL">
-            <input type="hidden" name="item_name" value="Shader: Lens Flare">
-            <input type="hidden" name="amount" value="19.90">
+            <input type="hidden" name="item_name" value="">
+            <input type="hidden" name="amount" value="">
             <input type="hidden" name="currency_code" value="BRL">
-            <input type="hidden" name="return" value="https://bernardo-ribeiro.github.io/pages/obrigado.html">
+            <input type="hidden" name="return" value="https://SEU_USUARIO.github.io/obrigado.html">
             <button class="buy-button" type="submit">Comprar com PayPal</button>
           </form>
         </div>
@@ -50,13 +49,13 @@
           <ul>
             <li>Arquivo .glsl</li>
             <li>Demo scene (.blend / .range)</li>
-            <li>README com instruções de integração</li>
+            <li>README com instruções</li>
           </ul>
         </div>
       </aside>
     </main>
   </div>
 
-  <script src="../assets/js/product.js"></script>
+  <script src="assets/js/product.js"></script>
 </body>
 </html>

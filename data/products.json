@@ -1,0 +1,41 @@
+[
+  {
+    "id": "lensflare",
+    "name": "Shader Lens Flare",
+    "category": "shaders",
+    "price": "39.90",
+    "shortDesc": "Simulação realista de reflexo de lente.",
+    "description": "Simulação realista de reflexo de lente com múltiplos halos e bloom dinâmico. Inclui arquivos GLSL otimizados para Range Engine 1.6 e documentação completa.",
+    "image": "lensflare-preview.jpg",
+    "gallery": [
+      "lensflare-preview.jpg",
+      "lensflare-demo-1.jpg"
+    ]
+  },
+  {
+    "id": "radar-scanner",
+    "name": "Radar Scanner GLSL",
+    "category": "shaders",
+    "price": "24.90",
+    "shortDesc": "Shader de radar com blips móveis e estela visual.",
+    "description": "Shader avançado de radar em GLSL para Range Engine 1.6, com rotação, traço dinâmico, blips animados e efeito de estela. Inclui documentação e arquivos de integração.",
+    "image": "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/radar-preview.png",
+    "gallery": [
+      "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/radar-preview.png",
+      "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/radar-preview-2.png"
+    ]
+  },
+  {
+    "id": "door-logic",
+    "name": "Porta Automática Logic",
+    "category": "logic",
+    "price": "9.90",
+    "shortDesc": "Sistema de abertura automática para portas na Range Engine.",
+    "description": "Sistema de lógica simples e eficiente para portas automáticas. Detecta aproximação do jogador e executa animações de abertura e fechamento. Código limpo e bem documentado.",
+    "image": "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/doorlogic-preview.png",
+    "gallery": [
+      "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/doorlogic-preview.png",
+      "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/doorlogic-preview-2.png"
+    ]
+  }
+]

@@ -55,10 +55,10 @@ html,body{height:100%;margin:0;background:var(--red);color:var(--text);}
   background: #fff;
 }
 .categories{margin-top:18px; display:flex; flex-direction:column; gap:8px;}
-.cat-btn{
+.category-btn{
   background:transparent;border:none;padding:10px;text-align:left;cursor:pointer;font-weight:600;
 }
-.cat-btn.active{background:#fff;border-radius:4px;padding-left:12px;}
+.category-btn.active{background:#fff;border-radius:4px;padding-left:12px;}
 
 /* conteúdo principal */
 .content{
@@ -118,7 +118,7 @@ html,body{height:100%;margin:0;background:var(--red);color:var(--text);}
 
 /* efeitos */
 .card:hover{transform:translateY(-4px);transition:transform 180ms;}
-.cat-btn:hover{opacity:0.9;}
+.category-btn:hover{opacity:0.9;}
 
 .gallery img {
   width: 90px;
