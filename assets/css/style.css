@@ -1,14 +1,14 @@
 :root {
-  --primary: #4361ee;
-  --primary-dark: #3a56d4;
-  --secondary: #7209b7;
-  --accent: #f72585;
-  --light: #f8f9fa;
-  --light-gray: #e9ecef;
-  --mid-gray: #adb5bd;
-  --dark: #212529;
-  --white: #ffffff;
-  --success: #4cc9f0;
+  --primary: #748cabff;        /* Silver Lake Blue */
+  --primary-dark: #3e5c76ff;   /* Payne's Gray */
+  --secondary: #1d2d44ff;      /* Prussian Blue */
+  --accent: #748cabff;         /* Silver Lake Blue */
+  --light: #f0ebd8ff;          /* Eggshell */
+  --light-gray: #1d2d44ff;     /* Prussian Blue */
+  --mid-gray: #3e5c76ff;       /* Payne's Gray */
+  --dark: #0d1321ff;           /* Rich Black */
+  --white: #1d2d44ff;          /* Prussian Blue */
+  --success: #748cabff;        /* Silver Lake Blue */
   --maxwidth: 1200px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --radius: 12px;
@@ -23,7 +23,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #748cabff 0%, #1d2d44ff 100%);
   color: var(--dark);
   line-height: 1.6;
 }
@@ -33,7 +33,7 @@ html, body {
   width: 95%;
   max-width: var(--maxwidth);
   margin: 20px auto;
-  background: var(--white);
+  background: var(--primary);
   box-shadow: var(--shadow);
   border-radius: var(--radius);
   min-height: 90vh;
@@ -47,7 +47,7 @@ html, body {
 .header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   padding: 2rem;
-  color: var(--white);
+  color: var(--light);
   position: relative;
   overflow: hidden;
 }
@@ -72,7 +72,7 @@ html, body {
 }
 
 .brand span {
-  color: var(--accent);
+  color: var(--white);
 }
 
 .tagline {
@@ -176,6 +176,7 @@ html, body {
 }
 
 .category-btn:hover {
+  color: var(--light);
   background: var(--light-gray);
   transform: translateX(4px);
 }
@@ -199,7 +200,7 @@ html, body {
 .content {
   flex: 1;
   padding: 2rem;
-  background: var(--white);
+  background: var(--primary);
 }
 
 .content-header {
@@ -305,14 +306,14 @@ html, body {
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--dark);
+  color: var(--light);
 }
 
 .card-desc {
   flex: 1;
   margin: 0 0 1rem 0;
   font-size: 0.9rem;
-  color: var(--mid-gray);
+  color: var(--primary);
   line-height: 1.5;
 }
 
@@ -326,11 +327,11 @@ html, body {
 .price {
   font-weight: 800;
   font-size: 1.3rem;
-  color: var(--primary);
+  color: var(--light);
 }
 
 .details {
-  background: var(--primary);
+  background: var(--light);
   color: var(--white);
   padding: 0.75rem 1.5rem;
   border-radius: 50px;
@@ -342,12 +343,13 @@ html, body {
 
 .details:hover {
   background: transparent;
-  color: var(--primary);
+  color: var(--light);
   transform: scale(1.05);
 }
 
 /* Página do produto */
 .product-main {
+  background: var(--primary);
   display: flex;
   gap: 3rem;
   padding: 2rem;
@@ -410,7 +412,7 @@ html, body {
 
 .buy-button {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  color: var(--white);
+  color: var(--light);
   border: none;
   padding: 1.25rem 2rem;
   font-weight: 700;
@@ -444,7 +446,7 @@ html, body {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
-  color: var(--primary);
+  color: var(--dark);
   text-decoration: none;
   font-weight: 600;
   transition: var(--transition);
@@ -452,7 +454,7 @@ html, body {
 
 .back-link:hover {
   gap: 0.75rem;
-  color: var(--secondary);
+  color: var(--light);
 }
 
 /* Responsividade */
