@@ -21,12 +21,17 @@
 }
 
 html, body {
-  height: auto;
+  height: 100%;
+  min-height: 100%;
   margin: 0;
   background: linear-gradient(135deg, #748cabff 0%, #1d2d44ff 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
   color: var(--dark);
   line-height: 1.6;
 }
+
 
 /* Frame central modernizado */
 .frame {
