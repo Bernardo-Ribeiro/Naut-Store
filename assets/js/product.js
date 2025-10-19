@@ -2,14 +2,12 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   const baseURL = "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/img/";
-  const mainImage = document.querySelector(".product-media img");
   const galleryContainer = document.querySelector(".gallery");
-
   const params = new URLSearchParams(window.location.search);
   const productId = params.get("id");
   if (!productId) return;
 
-  // 🔧 função auxiliar: se já for URL completa, usa direto
+  // Se a imagem já for uma URL completa, não adiciona o baseURL
   const resolveURL = (path) => (path.startsWith("http") ? path : baseURL + path);
 
   try {
@@ -18,17 +16,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
-    // Preenche informações
+    // --- Atualiza informações principais ---
     document.title = `${product.name} — Naut Store`;
     document.querySelector("h2").textContent = product.name;
     document.querySelector(".long-desc").textContent = product.description;
-    document.querySelector(".price-large").textContent = `R$ ${product.price}`;
+    document.querySelector(".price-large").textContent = `US$ ${product.price}`;
 
-    // Atualiza imagem principal
+    // --- Atualiza imagem principal ---
     const media = document.querySelector(".product-media");
     media.innerHTML = `<img src="${resolveURL(product.gallery[0])}" alt="${product.name}">`;
 
-    // Galeria
+    // --- Monta galeria ---
     galleryContainer.innerHTML = "";
     product.gallery.forEach((img, index) => {
       const thumb = document.createElement("img");
@@ -44,9 +42,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       galleryContainer.appendChild(thumb);
     });
 
-    // Atualiza PayPal
-    document.querySelector('input[name="item_name"]').value = product.name;
-    document.querySelector('input[name="amount"]').value = product.price;
+    // --- Atualiza o botão PayPal ---
+    const priceBuyContainer = document.querySelector(".price-buy");
+
+    // Se o produto tiver um botão personalizado no JSON, substitui o formulário padrão
+    if (product.button) {
+      priceBuyContainer.querySelector("form")?.remove();
+      const div = document.createElement("div");
+      div.innerHTML = product.button; // HTML vindo do JSON
+      priceBuyContainer.appendChild(div);
+    } else {
+      // Caso contrário, preenche o formulário padrão com os dados
+      document.querySelector('input[name="item_name"]').value = product.name;
+      document.querySelector('input[name="amount"]').value = product.price;
+    }
 
   } catch (err) {
     console.error("Erro ao carregar produto:", err);

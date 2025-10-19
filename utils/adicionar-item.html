@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerar Item JSON</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      padding: 40px;
+      color: #333;
+    }
+    form {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 650px;
+      margin: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .category-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .category-btn {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: 0.2s;
+      user-select: none;
+    }
+    .category-btn:hover {
+      background: #e4e4e4;
+    }
+    .category-btn.active {
+      background: #3e78b2;
+      color: white;
+      border-color: #3e78b2;
+    }
+    button {
+      margin-top: 20px;
+      background: #3e78b2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004ba8;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #dcdcdc;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 25px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .paypal-section {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f7ff;
+      border-radius: 8px;
+      border: 1px solid #b5d3f0;
+    }
+  </style>
+</head>
+<body>
+
+  <form id="jsonForm">
+    <h2>Gerar Item JSON</h2>
+
+    <label for="id">ID</label>
+    <input type="text" id="id" name="id" placeholder="ex: lensflare" required>
+
+    <label for="name">Nome</label>
+    <input type="text" id="name" name="name" placeholder="ex: Shader Lens Flare" required>
+
+    <label>Categoria</label>
+    <div class="category-buttons">
+      <div class="category-btn" data-value="shaders">Shaders</div>
+      <div class="category-btn" data-value="logic">Logic</div>
+      <div class="category-btn" data-value="models">Models</div>
+    </div>
+
+    <label for="price">Preço (US$)</label>
+    <input type="text" id="price" name="price" placeholder="ex: 39.90" required>
+
+    <label for="shortDesc">Descrição curta</label>
+    <input type="text" id="shortDesc" name="shortDesc" placeholder="ex: Simulação realista de reflexo de lente.">
+
+    <label for="description">Descrição completa</label>
+    <textarea id="description" name="description" rows="4" placeholder="ex: Simulação realista de reflexo de lente com múltiplos halos e bloom dinâmico..."></textarea>
+
+    <label for="image">Imagem principal</label>
+    <input type="text" id="image" name="image" placeholder="ex: lensflare-1.png">
+
+    <label for="gallery">Galeria (separe por vírgula)</label>
+    <input type="text" id="gallery" name="gallery" placeholder="ex: lensflare-1.png, lensflare-2.gif, lensflare-3.png">
+
+    <!-- 🔹 Campo do formulário PayPal -->
+    <div class="paypal-section">
+      <h3>Botão PayPal (HTML completo)</h3>
+      <textarea id="paypalForm" name="paypalForm" rows="7" placeholder="Cole aqui o código completo do botão PayPal..."></textarea>
+    </div>
+
+    <button type="button" onclick="gerarJSON()">Gerar JSON</button>
+  </form>
+
+  <pre id="output"></pre>
+
+  <script>
+    let categoriaSelecionada = '';
+
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        categoriaSelecionada = btn.dataset.value;
+      });
+    });
+
+    function limparHTMLparaJSON(html) {
+      return html
+        .replace(/\r?\n|\r/g, ' ')       // remove quebras de linha
+        .replace(/\s{2,}/g, ' ')         // remove espaços extras
+        .replace(/"/g, "'")              // troca aspas duplas por simples
+        .trim();
+    }
+
+    function gerarJSON() {
+      const id = document.getElementById('id').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const category = categoriaSelecionada || '';
+      const price = document.getElementById('price').value.trim();
+      const shortDesc = document.getElementById('shortDesc').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const image = document.getElementById('image').value.trim();
+      const gallery = document.getElementById('gallery').value.split(',')
+        .map(i => i.trim()).filter(i => i !== '');
+      const paypalForm = document.getElementById('paypalForm').value.trim();
+
+      if (!category) {
+        alert('Selecione uma categoria antes de gerar o JSON!');
+        return;
+      }
+
+      const item = {
+        id,
+        name,
+        category,
+        price,
+        ...(paypalForm && { button: limparHTMLparaJSON(paypalForm) }),
+        shortDesc,
+        description,
+        image,
+        gallery
+      };
+
+      document.getElementById('output').textContent = JSON.stringify(item, null, 2);
+    }
+  </script>
+
+</body>
+</html>

@@ -1,14 +1,14 @@
 :root {
-  --primary: #748cabff;        /* Silver Lake Blue */
-  --primary-dark: #3e5c76ff;   /* Payne's Gray */
-  --secondary: #1d2d44ff;      /* Prussian Blue */
-  --accent: #748cabff;         /* Silver Lake Blue */
-  --light: #f0ebd8ff;          /* Eggshell */
-  --light-gray: #1d2d44ff;     /* Prussian Blue */
-  --mid-gray: #3e5c76ff;       /* Payne's Gray */
-  --dark: #0d1321ff;           /* Rich Black */
-  --white: #1d2d44ff;          /* Prussian Blue */
-  --success: #748cabff;        /* Silver Lake Blue */
+  --primary: #748cabff;
+  --primary-dark: #3e5c76ff;
+  --secondary: #1d2d44ff;
+  --accent: #748cabff;
+  --light: #f0ebd8ff;
+  --light-gray: #1d2d44ff;
+  --mid-gray: #3e5c76ff;
+  --dark: #0d1321ff;
+  --blue: #1d2d44ff;
+  --success: #748cabff;
   --maxwidth: 1200px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --radius: 12px;
@@ -21,7 +21,7 @@
 }
 
 html, body {
-  height: 100%;
+  height: auto;
   margin: 0;
   background: linear-gradient(135deg, #748cabff 0%, #1d2d44ff 100%);
   color: var(--dark);
@@ -72,7 +72,7 @@ html, body {
 }
 
 .brand span {
-  color: var(--white);
+  color: var(--blue);
 }
 
 .tagline {
@@ -123,7 +123,7 @@ html, body {
   outline: none;
   font-size: 1rem;
   transition: var(--transition);
-  background: var(--white);
+  background: var(--blue);
 }
 
 .searchbox input:focus {
@@ -188,7 +188,7 @@ html, body {
 
 .category-btn.active {
   background: var(--primary);
-  color: var(--white);
+  color: var(--blue);
   box-shadow: var(--shadow);
 }
 
@@ -224,7 +224,7 @@ html, body {
   padding: 0.75rem 1rem;
   border: 2px solid var(--light-gray);
   border-radius: var(--radius);
-  background: var(--white);
+  background: var(--blue);
   font-size: 1rem;
   cursor: pointer;
   transition: var(--transition);
@@ -245,7 +245,7 @@ html, body {
 
 /* Card de produto modernizado */
 .card {
-  background: var(--white);
+  background: var(--blue);
   border-radius: var(--radius);
   overflow: hidden;
   display: flex;
@@ -267,7 +267,7 @@ html, body {
   top: 1rem;
   right: 1rem;
   background: var(--accent);
-  color: var(--white);
+  color: var(--blue);
   padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 0.8rem;
@@ -297,7 +297,7 @@ html, body {
 
 .card-body {
   padding: 1.5rem;
-  background: var(--white);
+  background: var(--blue);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -333,7 +333,7 @@ html, body {
 
 .details {
   background: var(--light);
-  color: var(--white);
+  color: var(--blue);
   padding: 0.75rem 1.5rem;
   border-radius: 50px;
   text-decoration: none;
@@ -369,6 +369,8 @@ html, body {
 }
 
 .product-media {
+  width: 600px;
+  height: 400px;
   background: var(--light-gray);
   border-radius: var(--radius);
   overflow: hidden;
@@ -434,7 +436,7 @@ html, body {
 .thankyou {
   padding: 4rem 2rem;
   text-align: center;
-  background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
+  background: linear-gradient(135deg, var(--light) 0%, var(--blue) 100%);
 }
 
 .thankyou-icon {

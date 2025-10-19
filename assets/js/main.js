@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h3 class="card-title">${p.name}</h3>
           <p class="card-desc">${p.shortDesc}</p>
           <div class="card-footer">
-            <span class="price">R$ ${p.price}</span>
+            <span class="price">US$ ${p.price}</span>
             <a class="details" href="product.html?id=${p.id}">Ver</a>
           </div>
         </div>
