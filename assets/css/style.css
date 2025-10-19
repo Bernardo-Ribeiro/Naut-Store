@@ -374,8 +374,6 @@ html, body {
 }
 
 .product-media {
-  width: 600px;
-  height: 400px;
   background: var(--light-gray);
   border-radius: var(--radius);
   overflow: hidden;
