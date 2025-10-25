@@ -5,13 +5,30 @@
     "category": "shaders",
     "price": "2.00",
     "button": "<form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='_top'> <input type='hidden' name='cmd' value='_s-xclick' /> <input type='hidden' name='hosted_button_id' value='NUGZLQATU3PD6' /> <input type='hidden' name='currency_code' value='USD' /> <input type='image' src='https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif' border='0' name='submit' title='O PayPal é a forma fácil e segura de pagar suas compras on-line.' alt='Comprar agora' /> </form>",
-    "shortDesc": "Simulação realista de reflexo de lente.",
-    "description": "Simulação realista de reflexo de lente com múltiplos halos e bloom dinâmico. Inclui arquivos GLSL otimizados para Range Engine 1.6 e documentação completa.",
+    "shortDesc": "Add physically based anamorph flares.",
+    "description": "Add physically based anamorph flares to your game. Enhance highlights and light sources with a realistic optical look",
     "image": "lensflare-1.png",
     "gallery": [
       "lensflare-1.png",
       "lensflare-2.gif",
       "lensflare-3.png"
     ]
-  }
+  },
+
+{
+  "id": "ssgi",
+  "name": "Shader SSGI",
+  "category": "shaders",
+  "price": "4,00",
+  "button": "<form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='_top'><input type='hidden' name='cmd' value='_s-xclick' /><input type='hidden' name='hosted_button_id' value='HY5QFTG8AF6W2' /><input type='hidden' name='currency_code' value='USD' /><input type='image' src='https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif' border='0' name='submit' title='O PayPal é a forma fácil e segura de pagar suas compras on-line.' alt='Comprar agora' /></form>",
+  "shortDesc": "screen-space global illumination.",
+  "description": "Add real-time global illumination to your game. Achieve dynamic indirect lighting and richer visuals fully screen-space, fast and easy to integrate.",
+  "image": "ssgi-1.png",
+  "gallery": [
+    "ssgi-1.png",
+    "ssgi-2.gif",
+    "ssgi-3.gif"
+  ]
+}
+
 ]
