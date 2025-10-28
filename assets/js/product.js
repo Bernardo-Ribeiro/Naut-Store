@@ -10,6 +10,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Se a imagem já for uma URL completa, não adiciona o baseURL
   const resolveURL = (path) => (path.startsWith("http") ? path : baseURL + path);
 
+  // Helpers para preço/gratuito
+  const parsePrice = (value) => {
+    if (value === undefined || value === null) return NaN;
+    if (typeof value === "number") return value;
+    const normalized = String(value).trim().replace(",", ".");
+    const num = parseFloat(normalized);
+    return isNaN(num) ? NaN : num;
+  };
+  const isFree = (p) => p?.free === true || parsePrice(p?.price) === 0;
+
   try {
     const res = await fetch("./data/products.json");
     const products = await res.json();
@@ -20,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.title = `${product.name} — Naut Store`;
     document.querySelector("h2").textContent = product.name;
     document.querySelector(".long-desc").textContent = product.description;
-    document.querySelector(".price-large").textContent = `US$ ${product.price}`;
+    document.querySelector(".price-large").textContent = isFree(product) ? "Free" : `US$ ${product.price}`;
 
     // --- Atualiza imagem principal ---
     const media = document.querySelector(".product-media");
@@ -42,22 +52,48 @@ document.addEventListener("DOMContentLoaded", async () => {
       galleryContainer.appendChild(thumb);
     });
 
-    // --- Atualiza o botão PayPal ---
+    // --- Atualiza a área de compra / download ---
     const priceBuyContainer = document.querySelector(".price-buy");
 
-    // Se o produto tiver um botão personalizado no JSON, substitui o formulário padrão
-    if (product.button) {
+    // Se for grátis, remove PayPal e mostra botão de download
+    if (isFree(product)) {
       priceBuyContainer.querySelector("form")?.remove();
-      const div = document.createElement("div");
-      div.innerHTML = product.button; // HTML vindo do JSON
-      priceBuyContainer.appendChild(div);
+
+      // Usa product.downloadUrl se existir; caso contrário tenta um padrão por id em releases do GitHub
+      const downloadUrl = "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/files/" + (product.downloadUrl || product.download || product.file || null);
+
+      const cta = document.createElement("a");
+      cta.className = "buy-button download-button";
+      cta.textContent = "Download for free";
+      cta.setAttribute("rel", "noopener noreferrer");
+      cta.setAttribute("target", "_blank");
+
+      if (downloadUrl) {
+        cta.href = downloadUrl;
+      } else {
+        // Mantém o botão desabilitado se não tiver URL de download definida
+        cta.href = "#";
+        cta.setAttribute("aria-disabled", "true");
+        cta.style.opacity = "0.7";
+        cta.style.pointerEvents = "none";
+        cta.textContent = "Download unavailable";
+      }
+      priceBuyContainer.appendChild(cta);
+
     } else {
-      // Caso contrário, preenche o formulário padrão com os dados
-      document.querySelector('input[name="item_name"]').value = product.name;
-      document.querySelector('input[name="amount"]').value = product.price;
+      // Produto pago: usa botão personalizado do JSON se houver, senão preenche formulário padrão
+      if (product.button) {
+        priceBuyContainer.querySelector("form")?.remove();
+        const div = document.createElement("div");
+        div.innerHTML = product.button; // HTML vindo do JSON
+        priceBuyContainer.appendChild(div);
+      } else {
+        document.querySelector('input[name="item_name"]').value = product.name;
+        document.querySelector('input[name="amount"]').value = product.price;
+      }
     }
 
   } catch (err) {
-    console.error("Erro ao carregar produto:", err);
+    console.error("Error loading product:", err);
   }
 });

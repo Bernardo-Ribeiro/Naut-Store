@@ -8,6 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allProducts = [];
 
+  // Helpers para preço/gratuito
+  const parsePrice = (value) => {
+    if (value === undefined || value === null) return NaN;
+    if (typeof value === "number") return value;
+    // normaliza vírgula para ponto
+    const normalized = String(value).trim().replace(",", ".");
+    const num = parseFloat(normalized);
+    return isNaN(num) ? NaN : num;
+  };
+  const isFree = (p) => p?.free === true || parsePrice(p?.price) === 0;
+
   // === Carregar JSON de produtos ===
   fetch("data/products.json")
     .then(response => response.json())
@@ -16,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderProducts(products);
     })
     .catch(err => {
-      productList.innerHTML = "<p>Erro ao carregar produtos.</p>";
+      productList.innerHTML = "<p>Error loading products.</p>";
       console.error(err);
     });
 
@@ -43,12 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function filterAndRender(category, q) {
     const query = q.trim().toLowerCase();
     const filtered = allProducts.filter(p => {
-      const matchesCat = category === "all" || p.category === category;
+      const matchesFree = category === "free" ? isFree(p) : true;
+      const matchesCat = category === "all" || category === "free" || p.category === category;
       const matchesText =
         !query ||
         p.name.toLowerCase().includes(query) ||
         p.shortDesc.toLowerCase().includes(query);
-      return matchesCat && matchesText;
+      return matchesCat && matchesFree && matchesText;
     });
     renderProducts(filtered);
   }
@@ -65,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Aplica o baseURL à imagem principal
       const imgURL = p.image.startsWith("http") ? p.image : baseURL + p.image;
+      const priceLabel = isFree(p) ? "Free" : `US$ ${p.price}`;
 
       card.innerHTML = `
         <div class="card-img" style="background-image: url('${imgURL}')"></div>
@@ -72,8 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <h3 class="card-title">${p.name}</h3>
           <p class="card-desc">${p.shortDesc}</p>
           <div class="card-footer">
-            <span class="price">US$ ${p.price}</span>
-            <a class="details" href="product.html?id=${p.id}">Ver</a>
+            <span class="price">${priceLabel}</span>
+            <a class="details" href="product.html?id=${p.id}">View</a>
           </div>
         </div>
       `;
