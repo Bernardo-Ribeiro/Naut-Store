@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
+
 :root {
   --primary: #748cabff;
   --primary-dark: #3e5c76ff;
   --secondary: #1d2d44ff;
   --accent: #748cabff;
-  --light: #f0ebd8ff;
+  --light: rgb(248, 245, 233);
   --light-gray: #1d2d44ff;
   --mid-gray: #3e5c76ff;
   --dark: #0d1321ff;
@@ -17,7 +19,14 @@
 
 * {
   box-sizing: border-box;
+}
+
+body, p {
   font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Outfit', sans-serif;
 }
 
 html, body {
@@ -31,6 +40,7 @@ html, body {
   color: var(--dark);
   line-height: 1.6;
 }
+
 
 
 /* Main frame */
@@ -137,13 +147,20 @@ html, body {
 }
 
 .searchbox::before {
-  content: '🔍';
+  content: '';
+  width: 18px;
+  height: 18px;
+  background-image: url('../icons/icon_lupe.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
   position: absolute;
   left: 1.2rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
   opacity: 0.5;
+  pointer-events: none;
 }
 
 .categories {

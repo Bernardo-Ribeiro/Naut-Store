@@ -7,10 +7,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const productId = params.get("id");
   if (!productId) return;
 
-  // Se a imagem já for uma URL completa, não adiciona o baseURL
+  // If the image is already a full URL, don't prepend the baseURL
   const resolveURL = (path) => (path.startsWith("http") ? path : baseURL + path);
 
-  // Helpers para preço/gratuito
+  // Helpers for price/free items
   const parsePrice = (value) => {
     if (value === undefined || value === null) return NaN;
     if (typeof value === "number") return value;
@@ -26,17 +26,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
-    // --- Atualiza informações principais ---
+    // --- Update main information ---
     document.title = `${product.name} — Naut Store`;
     document.querySelector("h2").textContent = product.name;
     document.querySelector(".long-desc").textContent = product.description;
     document.querySelector(".price-large").textContent = isFree(product) ? "Free" : `US$ ${product.price}`;
 
-    // --- Atualiza imagem principal ---
+    // --- Update main image ---
     const media = document.querySelector(".product-media");
     media.innerHTML = `<img src="${resolveURL(product.gallery[0])}" alt="${product.name}">`;
 
-    // --- Monta galeria ---
+    // --- Build gallery ---
     galleryContainer.innerHTML = "";
     product.gallery.forEach((img, index) => {
       const thumb = document.createElement("img");
@@ -52,14 +52,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       galleryContainer.appendChild(thumb);
     });
 
-    // --- Atualiza a área de compra / download ---
+    // --- Update purchase / download area ---
     const priceBuyContainer = document.querySelector(".price-buy");
+    const form = priceBuyContainer.querySelector("form");
+    const button = priceBuyContainer.querySelector("button.buy-button");
 
-    // Se for grátis, remove PayPal e mostra botão de download
+    // If the product is free, remove the PayPal form and show a download button
     if (isFree(product)) {
-      priceBuyContainer.querySelector("form")?.remove();
+      form?.remove();
 
-      // Usa product.downloadUrl se existir; caso contrário tenta um padrão por id em releases do GitHub
+      // Use product.downloadUrl if available; otherwise try a GitHub releases pattern by id
       const downloadUrl = "https://cdn.jsdelivr.net/gh/Bernardo-Ribeiro/Naut-Store@main/assets/files/" + (product.downloadUrl || product.download || product.file || null);
 
       const cta = document.createElement("a");
@@ -71,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (downloadUrl) {
         cta.href = downloadUrl;
       } else {
-        // Mantém o botão desabilitado se não tiver URL de download definida
+        // Keep the button disabled if no download URL is defined
         cta.href = "#";
         cta.setAttribute("aria-disabled", "true");
         cta.style.opacity = "0.7";
@@ -81,15 +83,31 @@ document.addEventListener("DOMContentLoaded", async () => {
       priceBuyContainer.appendChild(cta);
 
     } else {
-      // Produto pago: usa botão personalizado do JSON se houver, senão preenche formulário padrão
-      if (product.button) {
-        priceBuyContainer.querySelector("form")?.remove();
-        const div = document.createElement("div");
-        div.innerHTML = product.button; // HTML vindo do JSON
-        priceBuyContainer.appendChild(div);
+      if (!form) return;
+
+      const hostedButtonIdMatch = product.button?.match(/name=['"]hosted_button_id['"][^>]*value=['"]([^'"]+)['"]/i);
+      const hostedButtonId = hostedButtonIdMatch?.[1];
+
+      if (hostedButtonId) {
+        form.action = "https://www.paypal.com/cgi-bin/webscr";
+        form.querySelector('input[name="cmd"]').value = "_s-xclick";
+        let hostedButtonInput = form.querySelector('input[name="hosted_button_id"]');
+        if (!hostedButtonInput) {
+          hostedButtonInput = document.createElement("input");
+          hostedButtonInput.type = "hidden";
+          hostedButtonInput.name = "hosted_button_id";
+          form.appendChild(hostedButtonInput);
+        }
+        hostedButtonInput.value = hostedButtonId;
       } else {
-        document.querySelector('input[name="item_name"]').value = product.name;
-        document.querySelector('input[name="amount"]').value = product.price;
+        form.querySelector('input[name="cmd"]').value = "_xclick";
+        form.querySelector('input[name="business"]').value = "YOUR_PAYPAL_EMAIL";
+        form.querySelector('input[name="item_name"]').value = product.name;
+        form.querySelector('input[name="amount"]').value = product.price;
+      }
+
+      if (button) {
+        button.textContent = "Buy with PayPal";
       }
     }
 

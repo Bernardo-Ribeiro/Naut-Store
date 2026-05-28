@@ -8,13 +8,13 @@
 </head>
 <body>
   <div class="frame">
-    <header class="header">
-      <h1 class="brand">Naut Store</h1>
-      <p class="tagline">Premium digital assets for creators</p>
-    </header>
+    <div data-include="header"></div>
 
     <main class="product-main">
-      <a class="back-link" href="index.html">← Back</a>
+      <a class="back-link" href="index.html" style="display:inline-flex; align-items:center; gap:0.5rem;">
+        <img src="assets/icons/icon_back.png" alt="" aria-hidden="true" style="width:16px; height:16px; display:block;">
+        Back
+      </a>
 
       <section class="product-left">
         <div class="product-media">
@@ -34,6 +34,7 @@
           <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
             <input type="hidden" name="cmd" value="_xclick">
             <input type="hidden" name="business" value="YOUR_PAYPAL_EMAIL">
+            <input type="hidden" name="hosted_button_id" value="">
             <input type="hidden" name="item_name" value="">
             <input type="hidden" name="amount" value="">
             <input type="hidden" name="currency_code" value="USD">
@@ -53,6 +54,7 @@
       </aside>
     </main>
   </div>
+  <script src="assets/js/include-header.js"></script>
   <script src="assets/js/product.js"></script>
 </body>
 </html>

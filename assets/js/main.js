@@ -8,18 +8,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allProducts = [];
 
-  // Helpers para preço/gratuito
+  // Helpers for price/free items
   const parsePrice = (value) => {
     if (value === undefined || value === null) return NaN;
     if (typeof value === "number") return value;
-    // normaliza vírgula para ponto
+    // normalize comma to dot
     const normalized = String(value).trim().replace(",", ".");
     const num = parseFloat(normalized);
     return isNaN(num) ? NaN : num;
   };
   const isFree = (p) => p?.free === true || parsePrice(p?.price) === 0;
 
-  // === Carregar JSON de produtos ===
+  // === Load product JSON ===
   fetch("data/products.json")
     .then(response => response.json())
     .then(products => {
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(err);
     });
 
-  // === Clique nos botões de categoria ===
+  // === Category button clicks ===
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelector(".category-btn.active")?.classList.remove("active");
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // === Pesquisa ===
+  // === Search ===
   if (searchInput) {
     searchInput.addEventListener("input", e => {
       const active = document.querySelector(".category-btn.active")?.dataset.category || "all";
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === Filtrar e renderizar ===
+  // === Filter and render ===
   function filterAndRender(category, q) {
     const query = q.trim().toLowerCase();
     const filtered = allProducts.filter(p => {
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderProducts(filtered);
   }
 
-  // === Renderizar produtos ===
+  // === Render products ===
   function renderProducts(list) {
     const grid = document.querySelector(".grid");
     grid.innerHTML = "";
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.className = "card";
       card.dataset.category = p.category;
 
-      // Aplica o baseURL à imagem principal
+      // Apply the baseURL to the main image
       const imgURL = p.image.startsWith("http") ? p.image : baseURL + p.image;
       const priceLabel = isFree(p) ? "Free" : `US$ ${p.price}`;
 
