@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naut Store | Página Principal</title>
+  <title>Naut Store | Main Page</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -21,6 +21,29 @@
     };
   </script>
   <style>
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(13, 19, 33, 0.8);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        180deg,
+        #2db8d1,
+        #748cab
+      );
+      border-radius: 999px;
+      border: 2px solid #0d1321;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      box-shadow:
+        0 0 10px rgba(77, 217, 230, 0.5),
+        0 0 20px rgba(77, 217, 230, 0.3);
+    }
     * {
       margin: 0;
       padding: 0;
@@ -133,7 +156,7 @@
     .section-divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, #748cab, transparent);
-      margin: 4rem 0;
+      margin: 0rem 0;
     }
 
     .cursor-glow {
@@ -198,114 +221,105 @@
         }
       `;
 
-      // Fragment Shader - Efeito de Água Submersa (Naut)
+      // Fragment Shader - Underwater Water Effect (Naut)
       const fragmentShader = `
-uniform float time;
-uniform vec2 mouse;
-uniform vec2 resolution;
-uniform float scrollProgress;
+      uniform float time;
+      uniform vec2 mouse;
+      uniform vec2 resolution;
+      uniform float scrollProgress;
 
-varying vec2 vUv;
+      varying vec2 vUv;
 
-float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-}
+      float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
 
-float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
+      float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
 
-    f = f * f * (3.0 - 2.0 * f);
+          f = f * f * (3.0 - 2.0 * f);
 
-    float a = hash(i);
-    float b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0));
-    float d = hash(i + vec2(1.0, 1.0));
+          float a = hash(i);
+          float b = hash(i + vec2(1.0, 0.0));
+          float c = hash(i + vec2(0.0, 1.0));
+          float d = hash(i + vec2(1.0, 1.0));
 
-    return mix(
-        mix(a, b, f.x),
-        mix(c, d, f.x),
-        f.y
-    );
-}
+          return mix(
+              mix(a, b, f.x),
+              mix(c, d, f.x),
+              f.y
+          );
+      }
 
-float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
+      float fbm(vec2 p) {
+          float v = 0.0;
+          float a = 0.5;
 
-    for(int i = 0; i < 5; i++) {
-        v += noise(p) * a;
-        p *= 2.0;
-        a *= 0.5;
-    }
+          for(int i = 0; i < 5; i++) {
+              v += noise(p) * a;
+              p *= 2.0;
+              a *= 0.5;
+          }
 
-    return v;
-}
+          return v;
+      }
 
-void main() {
+      void main() {
 
-    vec2 uv = vUv;
+          vec2 uv = vUv;
 
-    // Aspect correction
-    vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
+          // Aspect correction
+          vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
 
-    // Deep flow movement
-    vec2 p = uv * 2.5;
+          // Deep flow movement
+          vec2 p = uv * 2.5;
 
-    p.x += sin(time * 0.08 + p.y * 1.5) * 0.08;
-    p.y += cos(time * 0.06 + p.x * 1.2) * 0.08;
+          p.x += sin(time * 0.08 + p.y * 1.5) * 0.08;
+          p.y += cos(time * 0.06 + p.x * 1.2) * 0.08;
 
-    // Layered soft noise
-    float n1 = fbm(p + time * 0.03);
-    float n2 = fbm(p * 1.8 - time * 0.02);
+          float n1 = fbm(p + time * 0.03);
+          float n2 = fbm(p * 1.8 - time * 0.02);
 
-    float pattern = mix(n1, n2, 0.5);
+          float pattern = mix(n1, n2, 0.5);
 
-    // Dark navy palette
-    vec3 deep = vec3(0.015, 0.03, 0.07);
-    vec3 mid  = vec3(0.03, 0.09, 0.18);
-    vec3 soft = vec3(0.08, 0.22, 0.38);
+          vec3 deep = vec3(0.015, 0.03, 0.07);
+          vec3 mid  = vec3(0.03, 0.09, 0.18);
+          vec3 soft = vec3(0.08, 0.22, 0.38);
 
-    vec3 col = mix(deep, mid, pattern);
-    col = mix(col, soft, smoothstep(0.45, 0.9, pattern) * 0.35);
+          vec3 col = mix(deep, mid, pattern);
+          col = mix(col, soft, smoothstep(0.45, 0.9, pattern) * 0.35);
 
-    // Subtle vignette
-    float vignette = 1.0 - length(uv - 0.5) * 0.9;
-    col *= vignette;
+          float vignette = 1.0 - length(uv - 0.5) * 0.9;
+          col *= vignette;
 
-    // Mouse highlight
-    vec2 m = (uv - mouse) * aspect;
+          vec2 m = (uv - mouse) * aspect;
 
-    float dist = length(m);
+          float dist = length(m);
 
-    // Soft bloom ring
-    float glow =
-        exp(-dist * 8.0) * 0.6;
+          float glow =
+              exp(-dist * 60.0) * 0.2;
 
-    // Inner bright core
-    float core =
-        exp(-dist * 28.0);
+          float core =
+              exp(-dist * 100.0);
 
-    // Elegant ripple
-    float ripple =
-        sin(dist * 40.0 - time * 2.5) *
-        exp(-dist * 10.0);
+          float ripple =
+              sin(dist * 20.0 - time * 2.5) *
+              exp(-dist * 10.0);
 
-    vec3 mouseColor =
-        vec3(0.25, 0.65, 1.0) * glow +
-        vec3(0.6, 0.85, 1.0) * core +
-        vec3(0.15, 0.35, 0.8) * ripple * 0.25;
+          vec3 mouseColor =
+              vec3(0.25, 0.65, 1.0) * glow +
+              vec3(0.6, 0.85, 1.0) * core +
+              vec3(0.15, 0.35, 0.8) * ripple * 0.15;
 
-    col += mouseColor;
+          col += mouseColor;
 
-    // Tiny animated shimmer
-    col += sin(time + uv.y * 8.0) * 0.008;
+          col += sin(time + uv.y * 8.0) * 0.02;
 
-    // Contrast curve
-    col = pow(col, vec3(1.15));
+          col = pow(col, vec3(1.2));
 
-    gl_FragColor = vec4(col, 1.0);
-}
+          gl_FragColor = vec4(col, 1.0);
+      }
       `;
 
       uniforms = {
@@ -376,7 +390,7 @@ void main() {
       });
     }
 
-    // Intersection Observer para animações com scroll
+    // Intersection Observer for scroll animations
     function initScrollAnimations() {
       const elements = document.querySelectorAll('[data-reveal]');
       const observer = new IntersectionObserver((entries) => {
@@ -407,37 +421,37 @@ void main() {
       const servicos = [
         {
           titulo: "Voxel Cone Tracing (VCT)",
-          descricao: "Técnica de iluminação global baseada em voxelização da cena e cone tracing em múltiplos eixos. Permite iluminação indireta suave, reflexos difusos e propagação de luz dinâmica em tempo real.",
+          descricao: "Global illumination technique based on scene voxelization and multi-axis cone tracing. Allows smooth indirect lighting, diffuse reflections, and dynamic light propagation in real-time.",
           imagem: "https://leadwerksstorage.s3.us-east-2.amazonaws.com/monthly_2018_06/dc8_f.jpg.192ca743ab41e08cd42b8ba1a24d9a26.jpg",
           delay: 0,
         },
         {
           titulo: "Screen Space Global Illumination (SSGI)",
-          descricao: "Sistema de iluminação global em tempo real baseado em screen space, utilizando raymarching e acumulação temporal para simular rebotes indiretos de luz. Desenvolvido com foco em equilíbrio entre qualidade visual e performance.",
+          descricao: "Real-time global illumination system based on screen space, using raymarching and temporal accumulation to simulate indirect light bounces. Developed with a focus on balancing visual quality and performance.",
           imagem: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTFiZWcyb291ZmdyYjBkd215Nmc0NXIxejIwZXRkNTg4N3doaGc4cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5wWf7Hg7xve0LYdLhxC/giphy.gif",
           delay: 0.1,
         },
         {
           titulo: "Temporal Anti-Aliasing (TAA)",
-          descricao: "Shader de anti-aliasing temporal com reprojeção e acumulação entre frames para suavizar serrilhados e reduzir ruídos provenientes de efeitos como SSGI e reflexões screen space.",
+          descricao: "Temporal anti-aliasing shader with reprojection and accumulation between frames to smooth jagged edges and reduce noise from effects like SSGI and screen space reflections.",
           imagem: "https://images.digitalfoundry.net/239670e0ae8c5/1280x720.jpg",
           delay: 0.2,
         },
         {
           titulo: "Screen Space Ambient Occlusion (SSAO)",
-          descricao: "Shader de oclusão ambiente em screen space que adiciona profundidade e contato entre superfícies através da simulação de sombras indiretas em regiões menos expostas à luz.",
+          descricao: "Screen space ambient occlusion shader that adds depth and surface contact by simulating indirect shadows in regions less exposed to light.",
           imagem: "https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/hbao%2Bindoor-shadows-850w-480h.jpg",
           delay: 0.3,
         },
         {
-          titulo: "Lens Flare Cinemático",
-          descricao: "Efeito de pós-processamento que simula dispersão óptica de lentes reais, utilizando múltiplas camadas, ghosting e bloom para criar uma estética cinematográfica dinâmica.",
+          titulo: "Cinematic Lens Flare",
+          descricao: "Post-processing effect that simulates optical dispersion of real lenses, using multiple layers, ghosting, and bloom to create a dynamic cinematic aesthetic.",
           imagem: "https://www.shutterstock.com/shutterstock/videos/27574162/thumb/10.jpg?ip=x480",
           delay: 0.4,
         },
         {
           titulo: "Volumetric Lighting",
-          descricao: "Shader de iluminação volumétrica que simula feixes de luz atravessando partículas no ambiente, criando efeitos atmosféricos como névoa iluminada, god rays e profundidade cinematográfica em tempo real.",
+          descricao: "Volumetric lighting shader that simulates light beams passing through particles in the environment, creating atmospheric effects like illuminated fog, god rays, and real-time cinematic depth.",
           imagem: "https://media.licdn.com/dms/image/v2/D5612AQFDfD__-ZkPJA/article-cover_image-shrink_720_1280/B56ZnGecXhJ8AI-/0/1759971495051?e=2147483647&v=beta&t=Afddz-2-1Mmo34P_OpvBR1lka0zhxaKGxXeLF3c2CFE",
           delay: 0.5,
         },
@@ -449,6 +463,17 @@ void main() {
           card.style.setProperty('--delay', `${servicos[idx]?.delay || 0}s`);
         });
       }, []);
+      const showcaseRef = React.useRef(null);
+
+      const { scrollYProgress } = Motion.useScroll({
+        target: showcaseRef,
+      });
+
+      const scrollX = Motion.useTransform(
+        scrollYProgress,
+        [0, 1],
+        ["0%", "-81%"]
+      );
 
       return (
         <div className="relative min-h-screen text-[#f0ebd8] font-sans">
@@ -484,9 +509,9 @@ void main() {
                 transition={{ duration: 1, delay: 0.6 }}
                 className="text-xl md:text-2xl text-[#d9e2ec] mb-10 leading-relaxed max-w-3xl mx-auto"
               >
-                Shaders dinâmicos, efeitos em tempo real e integração visual para motores modernos.
+                Dynamic shaders, real-time effects, and visual integration for modern engines.
                 <br />
-                <span className="text-[#4dd9e6]">Técnica. Precisão. Inovação.</span>
+                <span className="text-[#4dd9e6]">Technique. Precision. Innovation.</span>
               </motion.div>
 
               <motion.div
@@ -499,14 +524,14 @@ void main() {
                   href="index.html"
                   className="px-8 py-4 rounded-xl bg-[#4dd9e6] text-[#051a3d] font-bold hover:scale-110 transition-transform duration-300 shadow-2xl shadow-[#2db8d1]/25"
                 >
-                  Explorar Loja
+                  Explore Store
                 </a>
 
                 <a
                   href="#contato"
                   className="px-8 py-4 rounded-xl border-2 border-[#2db8d1] bg-transparent text-[#f0ebd8] font-bold hover:bg-[#2db8d1]/10 transition-all duration-300"
                 >
-                  Entrar em Contato
+                  Get in Touch
                 </a>
               </motion.div>
 
@@ -526,106 +551,322 @@ void main() {
 
           <div className="section-divider"></div>
 
-          {/* SERVIÇOS SECTION */}
-          <section id="servicos" className="relative z-10 py-32 px-6">
-            <div className="max-w-7xl mx-auto">
+          {/* MANIFESTO SECTION */}
+          <section
+            id="manifesto"
+            className="relative z-10 min-h-screen flex items-center justify-center px-6 overflow-hidden"
+          >
+            <div className="max-w-[1800px] mx-auto w-full">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
-                className="mb-20"
               >
-                <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">Portfolio</span>
-                <h2 className="text-5xl md:text-6xl font-black text-[#f0ebd8] mt-4 mb-6">
-                  Especialidades do Desenvolvedor
+                <span className="block text-xs uppercase tracking-[0.8em] text-[#748cab] font-medium text-center">
+                  Studio
+                </span>
+
+                <h2
+                  className="
+                    mt-6
+                    text-center
+                    font-black
+                    uppercase
+                    leading-[0.88]
+                    tracking-[-0.05em]
+                    text-[#f0ebd8]
+                    font-['Outfit']
+
+                    text-[2rem]
+                    sm:text-[3rem]
+                    md:text-[4rem]
+                    lg:text-[5rem]
+                    xl:text-[7.5rem]
+                  "
+                >
+                  Redefining
+                  <span className="text-[#4dd9e6]"> Real-Time </span>
+                  Rendering.
+                  <br />
+
+                  Building
+                  <span className="text-[#4dd9e6]"> Cinematic </span>
+                  Shaders,
+                  <br />
+
+                  Lighting And
+                  <span className="text-[#4dd9e6]"> Atmosphere </span>
+                  For
+                  <br />
+
+                  Next-Generation
+                  Digital Worlds.
                 </h2>
-                <p className="text-lg text-[#d9e2ec] max-w-2xl">
-                  Iluminação avançada, pós-processamento e materiais dinâmicos para experiências visuais imersivas.
-                </p>
               </motion.div>
+            </div>
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#2db8d1] rounded-full blur-[140px]" />
+            </div>
+          </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* SHADER SHOWCASE */}
+          <section
+            ref={showcaseRef}
+            className="relative h-[500vh]"
+          >
+            <div className="sticky top-0 h-screen overflow-hidden flex items-center">
+
+              {/* Background glow */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[#2db8d1]/10 rounded-full blur-[180px]" />
+              </div>
+
+              <motion.div
+                style={{
+                  x: scrollX,
+                }}
+                className="flex gap-10 px-[10vw]"
+              >
+
                 {servicos.map((item, index) => (
-                  <motion.div
+                  <div
                     key={item.titulo}
-                    data-reveal
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.7, delay: item.delay }}
-                    className="group card-hover relative bg-[#1d2d44]/40 backdrop-blur-xl border border-[#3e5c76]/50 rounded-2xl overflow-hidden"
+                    className="
+                      relative
+                      min-w-[85vw]
+                      h-[80vh]
+                      rounded-[2rem]
+                      overflow-hidden
+                      border border-[#3e5c76]/40
+                      bg-[#0d1321]/60
+                      backdrop-blur-xl
+                      flex
+                      items-end
+                      group
+                    "
                   >
-                    {/* Gradient overlay on hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d1321]/80 to-transparent" />
-                    </div>
 
-                    {/* Image */}
-                    <div className="relative h-56 overflow-hidden">
-                      <img
-                        src={item.imagem}
-                        alt={item.titulo}
-                        className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d1321] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    </div>
+                    {/* IMAGE */}
+                    <img
+                      src={item.imagem}
+                      alt={item.titulo}
+                      className="
+                        absolute inset-0
+                        w-full h-full
+                        object-cover
+                        group-hover:scale-105
+                        transition-transform
+                        duration-700
+                      "
+                    />
 
-                    {/* Content */}
-                    <div className="relative p-6 z-10">
-                      <h3 className="text-xl font-bold text-[#f0ebd8] mb-3 group-hover:text-white transition-colors duration-300">
+                    {/* OVERLAY */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a1929] via-[#0a1929]/40 to-transparent" />
+
+                    {/* CONTENT */}
+                    <div className="relative z-10 p-12 max-w-3xl">
+                      <span className="text-[#4dd9e6] uppercase tracking-[0.3em] text-xs">
+                        Shader System
+                      </span>
+
+                      <h3 className="text-5xl md:text-7xl font-black mt-4 mb-6 text-[#f0ebd8]">
                         {item.titulo}
                       </h3>
-                      <p className="text-sm text-[#d9e2ec] leading-relaxed group-hover:text-white transition-colors duration-300">
+
+                      <p className="text-lg md:text-xl text-[#d9e2ec] leading-relaxed">
                         {item.descricao}
                       </p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
-              </div>
+
+              </motion.div>
             </div>
           </section>
 
           <div className="section-divider"></div>
 
           {/* SKILLS SECTION */}
-          <section className="relative z-10 py-32 px-6">
-            <div className="max-w-7xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="mb-16"
-              >
-                <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">Competências</span>
-                <h2 className="text-5xl md:text-6xl font-black text-[#f0ebd8] mt-4">
-                  Áreas de Expertise
-                </h2>
-              </motion.div>
+          <section className="relative z-10 py-40 px-6">
+            <div className="max-w-[1600px] mx-auto">
 
-              <div className="tech-grid">
-                {[
-                  { título: "Pipeline Gráfico", desc: "Otimização de passes de renderização e integração com engines modernas" },
-                  { título: "Iluminação & Materiais", desc: "BRDFs, PBR e sistemas avançados de iluminação dinâmica" },
-                  { título: "Pós-Processamento", desc: "Efeitos cinematográficos, bloom, aberração cromática e tone mapping" },
-                  { título: "Performance", desc: "Otimização sem sacrificar qualidade visual em tempo real" },
-                  { título: "Temporal Stability", desc: "TAA, reprojection e acumulação multi-frame" },
-                  { título: "Godot & Custom Engines", desc: "Integração com múltiplas plataformas e motores" },
-                ].map((skill, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: idx * 0.1 }}
-                    className="p-6 hover:bg-[#1d2d44]/80 transition-colors duration-300"
+              <div className="grid lg:grid-cols-[420px_1fr] gap-16">
+
+                {/* LADO ESQUERDO */}
+                <div className="lg:sticky lg:top-32 h-fit">
+
+                  <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">
+                    Skills
+                  </span>
+
+                  <motion.h2
+                    className="mt-6 text-6xl lg:text-7xl font-black leading-[0.9] text-[#f0ebd8]"
                   >
-                    <h3 className="font-bold text-[#f0ebd8] mb-2">{skill.título}</h3>
-                    <p className="text-sm text-[#d9e2ec]">{skill.desc}</p>
-                  </motion.div>
-                ))}
+                    {"Areas of".split(" ").map((word, i) => (
+                      <motion.span
+                        key={i}
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          duration: 0.6,
+                          delay: i * 0.15
+                        }}
+                        className="inline-block mr-4"
+                      >
+                        {word}
+                      </motion.span>
+                    ))}
+
+                    <br />
+
+                    <motion.span
+                      initial={{
+                        opacity: 0,
+                        filter: "blur(12px)"
+                      }}
+                      whileInView={{
+                        opacity: 1,
+                        filter: "blur(0px)"
+                      }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 1,
+                        delay: 0.4
+                      }}
+                      className="text-[#4dd9e6]"
+                    >
+                      Expertise
+                    </motion.span>
+                  </motion.h2>
+
+                  <div className="w-20 h-[2px] bg-[#4dd9e6] mt-8 mb-8" />
+
+                  <p className="text-[#d9e2ec] text-lg leading-relaxed">
+                    Advanced graphics solutions that unite
+                    real-time rendering, optimization,
+                    and visual direction for high-quality projects.
+                  </p>
+
+                </div>
+
+                {/* CARDS */}
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+
+                  {[
+                    {
+                      titulo: "Graphics Pipeline",
+                      desc: "Optimization of render passes and integration with modern engines.",
+                      imagem: "assets/pipeline.jpg",
+                    },
+                    {
+                      titulo: "Lighting & Materials",
+                      desc: "BRDFs, PBR, and advanced dynamic lighting systems.",
+                      imagem: "assets/lighting.jpg",
+                    },
+                    {
+                      titulo: "Post-Processing",
+                      desc: "Bloom, tone mapping, and cinematic effects.",
+                      imagem: "assets/post.jpg",
+                    },
+                    {
+                      titulo: "Performance",
+                      desc: "Maximum visual quality with minimum computational cost.",
+                      imagem: "assets/performance.jpg",
+                    },
+                    {
+                      titulo: "Temporal Stability",
+                      desc: "TAA, reprojection, and multi-frame accumulation.",
+                      imagem: "assets/taa.jpg",
+                    },
+                    {
+                      titulo: "Godot & Custom Engines",
+                      desc: "Integration with multiple engines and pipelines.",
+                      imagem: "assets/godot.jpg",
+                    },
+                  ].map((skill, idx) => (
+
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 40 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: idx * 0.08 }}
+                      className="
+                        group
+                        relative
+                        overflow-hidden
+                        rounded-[28px]
+                        border
+                        border-[#3e5c76]/30
+                        bg-[#0d1321]/50
+                        backdrop-blur-xl
+                        hover:border-[#4dd9e6]/50
+                        transition-all
+                        duration-500
+                      "
+                    >
+
+                      {/* NUMERO */}
+                      <div className="absolute top-6 left-6 z-20 text-3xl font-black text-[#4dd9e6]">
+                        {(idx + 1).toString().padStart(2, "0")}
+                      </div>
+
+                      {/* IMAGEM */}
+                      <div className="h-56 overflow-hidden">
+
+                        <img
+                          src={skill.imagem}
+                          alt=""
+                          className="
+                            w-full
+                            h-full
+                            object-cover
+                            group-hover:scale-110
+                            transition-transform
+                            duration-700
+                          "
+                        />
+
+                      </div>
+
+                      {/* CONTEÚDO */}
+                      <div className="p-8">
+
+                        <h3 className="text-2xl font-bold text-[#f0ebd8] mb-4">
+                          {skill.titulo}
+                        </h3>
+
+                        <p className="text-[#d9e2ec] leading-relaxed">
+                          {skill.desc}
+                        </p>
+
+                      </div>
+
+                      {/* GLOW */}
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          opacity-0
+                          group-hover:opacity-100
+                          transition-opacity
+                          duration-500
+                          pointer-events-none
+                        "
+                      >
+                        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#2db8d1]/20 rounded-full blur-[100px]" />
+                      </div>
+
+                    </motion.div>
+
+                  ))}
+
+                </div>
+
               </div>
+
             </div>
           </section>
 
@@ -642,12 +883,12 @@ void main() {
           >
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-5xl md:text-7xl font-black text-[#f0ebd8] mb-8">
-                Pronto para evoluir seu projeto?
+                Ready to evolve your project?
               </h2>
 
               <p className="text-lg text-[#d9e2ec] mb-12 leading-relaxed">
-                Integrate shaders de alta qualidade e efeitos visuais avançados no seu projeto.
-                Soluções técnicas, suporte completo e resultados mensuráveis.
+                Integrate high-quality shaders and advanced visual effects into your project.
+                Technical solutions, full support, and measurable results.
               </p>
 
               <div className="flex gap-4 justify-center flex-wrap">
@@ -655,7 +896,7 @@ void main() {
                   href="index.html"
                   className="px-8 py-4 rounded-xl bg-[#f0ebd8] text-[#0d1321] font-bold hover:scale-110 transition-transform"
                 >
-                  Ver Produtos
+                  See Products
                 </a>
 
                 <a
@@ -685,7 +926,7 @@ void main() {
           {/* FOOTER */}
           <footer className="relative z-10 border-t border-[#3e5c76] py-12 px-6 text-center text-[#d9e2ec] text-sm bg-[#0d1321]/45 backdrop-blur-md">
             <div className="max-w-7xl mx-auto">
-              <p className="mb-4">© 2026 Naut Store — Portfólio de um desenvolvedor de shaders moderno.</p>
+              <p className="mb-4">© 2026 Naut Store — Portfolio of a modern shader developer.</p>
               <div className="flex justify-center gap-6 text-xs text-[#748cab]">
                 <span>GLSL</span>
                 <span>OpenGL</span>
