@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -20,6 +21,12 @@
     };
   </script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     h1, h2, h3 {
       font-family: 'Outfit', sans-serif;
     }
@@ -27,15 +34,371 @@
     body, p {
       font-family: 'Inter', sans-serif;
     }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: -1;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #2db8d1, #4dd9e6, #2db8d1);
+      z-index: 100;
+      will-change: width;
+    }
+
+    .glow-text {
+      background: linear-gradient(135deg, #748cab, #f0ebd8, #748cab);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: glow-flicker 3s infinite;
+    }
+
+    @keyframes glow-flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    .float-animation {
+      animation: float-smooth 6s ease-in-out infinite;
+    }
+
+    @keyframes float-smooth {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .reveal-text {
+      opacity: 0;
+      animation: reveal-in 0.8s ease-out forwards;
+    }
+
+    @keyframes reveal-in {
+      0% { 
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-hover {
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+      position: relative;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-15px);
+    }
+
+    .card-hover::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #748cab, transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .card-hover:hover::before {
+      opacity: 1;
+    }
+
+    .tech-grid {
+      display: grid;
+      gap: 1px;
+      background: linear-gradient(135deg, rgba(116, 140, 171, 0.2), rgba(248, 235, 216, 0.1));
+      padding: 1px;
+      border-radius: 1.5rem;
+    }
+
+    .tech-grid > * {
+      background: #0d1321;
+      border-radius: calc(1.5rem - 2px);
+    }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #748cab, transparent);
+      margin: 4rem 0;
+    }
+
+    .cursor-glow {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
+      background: radial-gradient(circle, rgba(77, 217, 230, 0.5) 0%, transparent 70%);
+      border-radius: 50%;
+      mix-blend-mode: screen;
+      filter: blur(40px);
+      will-change: transform;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
   </style>
 </head>
-<body class="bg-[#0d1321] text-[#f0ebd8] font-sans">
+<body class="bg-[#0a1929] text-[#f0ebd8] font-sans overflow-x-hidden">
+  <div class="cursor-glow" id="cursor-glow"></div>
+  <div class="scroll-progress" id="scroll-progress"></div>
+  <div id="canvas-container"></div>
   <div id="root"></div>
 
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/framer-motion@11.18.2/dist/framer-motion.js"></script>
+
+  <script>
+    // THREE.JS SHADER BACKGROUND
+    let scene, camera, renderer, mesh, uniforms;
+    let mouseX = 0, mouseY = 0;
+    let scrollProgress = 0;
+
+    function initThreeJS() {
+      // Scene setup
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera(
+        -1, 1,
+        1, -1,
+        0, 1
+      );
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setClearColor(0x051a3d, 1);
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+      // Vertex Shader
+      const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `;
+
+      // Fragment Shader - Efeito de Água Submersa (Naut)
+      const fragmentShader = `
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+uniform float scrollProgress;
+
+varying vec2 vUv;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+
+    f = f * f * (3.0 - 2.0 * f);
+
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+
+    return mix(
+        mix(a, b, f.x),
+        mix(c, d, f.x),
+        f.y
+    );
+}
+
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+
+    for(int i = 0; i < 5; i++) {
+        v += noise(p) * a;
+        p *= 2.0;
+        a *= 0.5;
+    }
+
+    return v;
+}
+
+void main() {
+
+    vec2 uv = vUv;
+
+    // Aspect correction
+    vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
+
+    // Deep flow movement
+    vec2 p = uv * 2.5;
+
+    p.x += sin(time * 0.08 + p.y * 1.5) * 0.08;
+    p.y += cos(time * 0.06 + p.x * 1.2) * 0.08;
+
+    // Layered soft noise
+    float n1 = fbm(p + time * 0.03);
+    float n2 = fbm(p * 1.8 - time * 0.02);
+
+    float pattern = mix(n1, n2, 0.5);
+
+    // Dark navy palette
+    vec3 deep = vec3(0.015, 0.03, 0.07);
+    vec3 mid  = vec3(0.03, 0.09, 0.18);
+    vec3 soft = vec3(0.08, 0.22, 0.38);
+
+    vec3 col = mix(deep, mid, pattern);
+    col = mix(col, soft, smoothstep(0.45, 0.9, pattern) * 0.35);
+
+    // Subtle vignette
+    float vignette = 1.0 - length(uv - 0.5) * 0.9;
+    col *= vignette;
+
+    // Mouse highlight
+    vec2 m = (uv - mouse) * aspect;
+
+    float dist = length(m);
+
+    // Soft bloom ring
+    float glow =
+        exp(-dist * 8.0) * 0.6;
+
+    // Inner bright core
+    float core =
+        exp(-dist * 28.0);
+
+    // Elegant ripple
+    float ripple =
+        sin(dist * 40.0 - time * 2.5) *
+        exp(-dist * 10.0);
+
+    vec3 mouseColor =
+        vec3(0.25, 0.65, 1.0) * glow +
+        vec3(0.6, 0.85, 1.0) * core +
+        vec3(0.15, 0.35, 0.8) * ripple * 0.25;
+
+    col += mouseColor;
+
+    // Tiny animated shimmer
+    col += sin(time + uv.y * 8.0) * 0.008;
+
+    // Contrast curve
+    col = pow(col, vec3(1.15));
+
+    gl_FragColor = vec4(col, 1.0);
+}
+      `;
+
+      uniforms = {
+        time: { value: 0.0 },
+        mouse: { value: new THREE.Vector2(0.5, 0.5) },
+        scrollProgress: { value: 0.0 },
+        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+      };
+
+      const material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        transparent: false,
+        depthWrite: false
+      });
+
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      // Mouse tracking
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX / window.innerWidth;
+        mouseY = 1.0 - (e.clientY / window.innerHeight);
+        uniforms.mouse.value.set(mouseX, mouseY);
+      });
+
+      // Scroll tracking
+      window.addEventListener('scroll', () => {
+        scrollProgress = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+        uniforms.scrollProgress.value = scrollProgress;
+      });
+
+      // Window resize
+      window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        uniforms.resolution.value.set(
+          window.innerWidth,
+          window.innerHeight
+        );
+      });
+
+      animate();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      uniforms.time.value += 0.016;
+      renderer.render(scene, camera);
+    }
+
+    // Cursor glow tracking
+    function initCursorGlow() {
+      const glow = document.getElementById('cursor-glow');
+      document.addEventListener('mousemove', (e) => {
+        glow.style.transform = `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`;
+      });
+    }
+
+    // Scroll progress bar
+    function initScrollProgress() {
+      const progressBar = document.getElementById('scroll-progress');
+      window.addEventListener('scroll', () => {
+        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        progressBar.style.width = scrolled + '%';
+      });
+    }
+
+    // Intersection Observer para animações com scroll
+    function initScrollAnimations() {
+      const elements = document.querySelectorAll('[data-reveal]');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationDelay = entry.target.dataset.delay || '0s';
+            entry.target.classList.add('reveal-text');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      elements.forEach(el => observer.observe(el));
+    }
+
+    window.addEventListener('load', () => {
+      initThreeJS();
+      initCursorGlow();
+      initScrollProgress();
+      setTimeout(initScrollAnimations, 100);
+    });
+  </script>
 
   <script type="text/babel" data-presets="react">
     const { motion } = Motion;
@@ -46,256 +409,290 @@
           titulo: "Voxel Cone Tracing (VCT)",
           descricao: "Técnica de iluminação global baseada em voxelização da cena e cone tracing em múltiplos eixos. Permite iluminação indireta suave, reflexos difusos e propagação de luz dinâmica em tempo real.",
           imagem: "https://leadwerksstorage.s3.us-east-2.amazonaws.com/monthly_2018_06/dc8_f.jpg.192ca743ab41e08cd42b8ba1a24d9a26.jpg",
+          delay: 0,
         },
         {
           titulo: "Screen Space Global Illumination (SSGI)",
           descricao: "Sistema de iluminação global em tempo real baseado em screen space, utilizando raymarching e acumulação temporal para simular rebotes indiretos de luz. Desenvolvido com foco em equilíbrio entre qualidade visual e performance.",
           imagem: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTFiZWcyb291ZmdyYjBkd215Nmc0NXIxejIwZXRkNTg4N3doaGc4cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5wWf7Hg7xve0LYdLhxC/giphy.gif",
+          delay: 0.1,
         },
         {
           titulo: "Temporal Anti-Aliasing (TAA)",
           descricao: "Shader de anti-aliasing temporal com reprojeção e acumulação entre frames para suavizar serrilhados e reduzir ruídos provenientes de efeitos como SSGI e reflexões screen space.",
           imagem: "https://images.digitalfoundry.net/239670e0ae8c5/1280x720.jpg",
+          delay: 0.2,
         },
         {
           titulo: "Screen Space Ambient Occlusion (SSAO)",
           descricao: "Shader de oclusão ambiente em screen space que adiciona profundidade e contato entre superfícies através da simulação de sombras indiretas em regiões menos expostas à luz.",
           imagem: "https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/hbao%2Bindoor-shadows-850w-480h.jpg",
+          delay: 0.3,
         },
         {
           titulo: "Lens Flare Cinemático",
           descricao: "Efeito de pós-processamento que simula dispersão óptica de lentes reais, utilizando múltiplas camadas, ghosting e bloom para criar uma estética cinematográfica dinâmica.",
           imagem: "https://www.shutterstock.com/shutterstock/videos/27574162/thumb/10.jpg?ip=x480",
+          delay: 0.4,
         },
         {
           titulo: "Volumetric Lighting",
           descricao: "Shader de iluminação volumétrica que simula feixes de luz atravessando partículas no ambiente, criando efeitos atmosféricos como névoa iluminada, god rays e profundidade cinematográfica em tempo real.",
           imagem: "https://media.licdn.com/dms/image/v2/D5612AQFDfD__-ZkPJA/article-cover_image-shrink_720_1280/B56ZnGecXhJ8AI-/0/1759971495051?e=2147483647&v=beta&t=Afddz-2-1Mmo34P_OpvBR1lka0zhxaKGxXeLF3c2CFE",
+          delay: 0.5,
         },
       ];
 
+      React.useEffect(() => {
+        const cards = document.querySelectorAll('[data-reveal]');
+        cards.forEach((card, idx) => {
+          card.style.setProperty('--delay', `${servicos[idx]?.delay || 0}s`);
+        });
+      }, []);
+
       return (
-        <div className="min-h-screen text-[#f0ebd8] font-sans relative isolate">
-          <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
-            <img
-              src="https://rangeengine.tech/img/whatsnew/pbr.gif"
-              alt="Cena 3D de um barco na agua"
-              className="w-full h-full object-cover scale-105 opacity-75"
-            />
-            <div className="absolute inset-0 bg-[#0d1321]/35 backdrop-blur-[2px]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#748cab]/10 via-[#1d2d44]/50 to-[#0d1321]/85" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(116,140,171,0.18),transparent_50%)]" />
-          </div>
+        <div className="relative min-h-screen text-[#f0ebd8] font-sans">
+          {/* HERO SECTION */}
+          <header className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20 pb-20">
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-20 right-10 w-72 h-72 bg-[#2db8d1] rounded-full mix-blend-screen filter blur-3xl opacity-30" />
+              <div className="absolute bottom-20 left-10 w-72 h-72 bg-[#2db8d1] rounded-full mix-blend-screen filter blur-3xl opacity-30" />
+            </div>
 
-          <header className="relative overflow-hidden border-b border-[#3e5c76] min-h-screen flex items-center bg-[#0d1321]/35 backdrop-blur-[1px]">
-            <div className="relative max-w-7xl mx-auto px-6 py-10 w-full z-10">
-              <div className="flex items-center justify-between gap-4 mb-14">
-                <a className="text-sm uppercase tracking-[0.3em] text-[#d9e2ec] hover:text-white transition-colors">
-                  Naut Games Studio
-                </a>
-
-                <a
-                  href="index.html"
-                  className="px-5 py-2 rounded-full border border-[#748cab]/40 bg-[#1d2d44]/50 text-sm font-medium backdrop-blur-md hover:bg-[#3e5c76]/60 hover:border-[#f0ebd8]/50 transition-all"
-                >
-                  Open store
-                </a>
-              </div>
-
-              <motion.p
+            <div className="relative max-w-5xl text-center z-20">
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="uppercase tracking-[0.4em] text-sm text-[#d9e2ec] mb-5"
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="mb-6"
               >
-                Technical portfolio
-              </motion.p>
+                <span className="text-xs uppercase tracking-[0.4em] text-[#2db8d1] font-medium">Naut Games Studio</span>
+              </motion.div>
 
               <motion.h1
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 1 }}
-                className="text-5xl md:text-7xl font-black leading-tight max-w-4xl text-[#f0ebd8]"
+                transition={{ duration: 1, delay: 0.4 }}
+                className="text-6xl md:text-8xl font-black leading-tight mb-8 glow-text"
               >
-                GLSL and OpenGL shaders for modern engines
+                GLSL & OpenGL
               </motion.h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 30 }}
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45, duration: 1 }}
-                className="mt-8 text-[#d9e2ec] text-lg max-w-2xl leading-relaxed"
+                transition={{ duration: 1, delay: 0.6 }}
+                className="text-xl md:text-2xl text-[#d9e2ec] mb-10 leading-relaxed max-w-3xl mx-auto"
               >
-                This is Naut Store's institutional showcase: here clients understand the work of the
-                shader developer, see examples of deliveries, and move with one click to the digital products store.
-              </motion.p>
+                Shaders dinâmicos, efeitos em tempo real e integração visual para motores modernos.
+                <br />
+                <span className="text-[#4dd9e6]">Técnica. Precisão. Inovação.</span>
+              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                className="flex gap-4 mt-10 flex-wrap"
+                transition={{ duration: 0.8, delay: 0.8 }}
+                className="flex gap-4 justify-center flex-wrap mb-16"
               >
                 <a
                   href="index.html"
-                  className="px-6 py-3 rounded-2xl bg-[#f0ebd8] text-[#0d1321] font-semibold hover:scale-105 transition-all duration-300 hover:shadow-2xl hover:shadow-[#748cab]/25"
+                  className="px-8 py-4 rounded-xl bg-[#4dd9e6] text-[#051a3d] font-bold hover:scale-110 transition-transform duration-300 shadow-2xl shadow-[#2db8d1]/25"
                 >
-                  Go to the store
+                  Explorar Loja
                 </a>
 
                 <a
                   href="#contato"
-                  className="px-6 py-3 rounded-2xl border border-[#748cab]/50 bg-[#1d2d44]/40 backdrop-blur-md hover:border-[#f0ebd8] hover:bg-[#3e5c76]/35 transition-all duration-300"
+                  className="px-8 py-4 rounded-xl border-2 border-[#2db8d1] bg-transparent text-[#f0ebd8] font-bold hover:bg-[#2db8d1]/10 transition-all duration-300"
                 >
-                  Talk to the developer
+                  Entrar em Contato
                 </a>
               </motion.div>
 
-              <div className="mt-14 grid gap-4 md:grid-cols-3 max-w-4xl">
-                {[
-                  ["Shaders", "GLSL effects for lighting, post-processing, and materials."],
-                  ["Engines", "Solutions for Godot, Renge Engine, and UPBGE with a focus on practical integration."],
-                  ["Performance", "Visual solutions designed to preserve graphics quality and real-time performance."],
-                ].map(([titulo, descricao]) => (
-                  <div key={titulo} className="rounded-2xl border border-[#748cab]/20 bg-[#1d2d44]/45 p-5 backdrop-blur-md">
-                    <h3 className="text-lg font-semibold mb-2 text-[#f0ebd8]">{titulo}</h3>
-                    <p className="text-sm text-[#d9e2ec] leading-relaxed">{descricao}</p>
-                  </div>
-                ))}
-              </div>
+              {/* Scroll indicator */}
+              <motion.div
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: 1, y: [0, 10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 1.2 }}
+                className="flex justify-center"
+              >
+                <svg className="w-6 h-6 text-[#4dd9e6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </motion.div>
             </div>
           </header>
 
-          <section id="servicos" className="relative z-10 max-w-full mx-auto px-6 py-24 bg-[#0d1321]/75 backdrop-blur-[10px]">
-            <div className="flex items-center justify-between flex-wrap gap-4 mb-12">
-              <div>
-                <h2 className="text-4xl font-bold text-[#f0ebd8]">What the developer does</h2>
-                <p className="text-[#d9e2ec] mt-2">
-                  Shaders, real-time effects, and visual integration for games and interactive applications.
+          <div className="section-divider"></div>
+
+          {/* SERVIÇOS SECTION */}
+          <section id="servicos" className="relative z-10 py-32 px-6">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="mb-20"
+              >
+                <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">Portfolio</span>
+                <h2 className="text-5xl md:text-6xl font-black text-[#f0ebd8] mt-4 mb-6">
+                  Especialidades do Desenvolvedor
+                </h2>
+                <p className="text-lg text-[#d9e2ec] max-w-2xl">
+                  Iluminação avançada, pós-processamento e materiais dinâmicos para experiências visuais imersivas.
                 </p>
+              </motion.div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {servicos.map((item, index) => (
+                  <motion.div
+                    key={item.titulo}
+                    data-reveal
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, delay: item.delay }}
+                    className="group card-hover relative bg-[#1d2d44]/40 backdrop-blur-xl border border-[#3e5c76]/50 rounded-2xl overflow-hidden"
+                  >
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d1321]/80 to-transparent" />
+                    </div>
+
+                    {/* Image */}
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={item.imagem}
+                        alt={item.titulo}
+                        className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d1321] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative p-6 z-10">
+                      <h3 className="text-xl font-bold text-[#f0ebd8] mb-3 group-hover:text-white transition-colors duration-300">
+                        {item.titulo}
+                      </h3>
+                      <p className="text-sm text-[#d9e2ec] leading-relaxed group-hover:text-white transition-colors duration-300">
+                        {item.descricao}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-
-              <div className="text-sm text-[#d9e2ec] border border-[#748cab]/30 px-4 py-2 rounded-full bg-[#1d2d44]/30">
-                GLSL • OpenGL • Godot • Renge Engine • UPBGE
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {servicos.map((item, index) => (
-                <motion.div
-                  key={item.titulo}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, delay: index * 0.08 }}
-                  whileHover={{ y: -10 }}
-                  className="group bg-[#1d2d44]/70 backdrop-blur-md border border-[#3e5c76] rounded-3xl overflow-hidden hover:border-[#748cab] hover:shadow-2xl hover:shadow-[#0d1321]/50 transition-all duration-500"
-                >
-                  <div className="overflow-hidden relative">
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0d1321]/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                    <img
-                      src={item.imagem}
-                      alt={item.titulo}
-                      className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold mb-3 text-[#f0ebd8] group-hover:text-white transition-colors">
-                      {item.titulo}
-                    </h3>
-
-                    <p className="text-[#d9e2ec] leading-relaxed text-sm group-hover:text-white transition-colors">
-                      {item.descricao}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
             </div>
           </section>
 
+          <div className="section-divider"></div>
+
+          {/* SKILLS SECTION */}
+          <section className="relative z-10 py-32 px-6">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="mb-16"
+              >
+                <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">Competências</span>
+                <h2 className="text-5xl md:text-6xl font-black text-[#f0ebd8] mt-4">
+                  Áreas de Expertise
+                </h2>
+              </motion.div>
+
+              <div className="tech-grid">
+                {[
+                  { título: "Pipeline Gráfico", desc: "Otimização de passes de renderização e integração com engines modernas" },
+                  { título: "Iluminação & Materiais", desc: "BRDFs, PBR e sistemas avançados de iluminação dinâmica" },
+                  { título: "Pós-Processamento", desc: "Efeitos cinematográficos, bloom, aberração cromática e tone mapping" },
+                  { título: "Performance", desc: "Otimização sem sacrificar qualidade visual em tempo real" },
+                  { título: "Temporal Stability", desc: "TAA, reprojection e acumulação multi-frame" },
+                  { título: "Godot & Custom Engines", desc: "Integração com múltiplas plataformas e motores" },
+                ].map((skill, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: idx * 0.1 }}
+                    className="p-6 hover:bg-[#1d2d44]/80 transition-colors duration-300"
+                  >
+                    <h3 className="font-bold text-[#f0ebd8] mb-2">{skill.título}</h3>
+                    <p className="text-sm text-[#d9e2ec]">{skill.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <div className="section-divider"></div>
+
+          {/* CTA SECTION */}
           <motion.section
+            id="contato"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.7 }}
-            className="relative z-10 border-y border-[#3e5c76] bg-[#1d2d44]/60"
+            transition={{ duration: 0.8 }}
+            className="relative z-10 py-32 px-6"
           >
-            <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-3 gap-8">
-              <div className="bg-[#1d2d44]/70 border border-[#3e5c76] rounded-3xl p-8 backdrop-blur-md">
-                <h3 className="text-2xl font-bold mb-3 text-[#f0ebd8]">Pipeline</h3>
-                <p className="text-[#d9e2ec] leading-relaxed">
-                  Scene organization, render passes, and integration between art, code, and the graphics engine.
-                </p>
-              </div>
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-5xl md:text-7xl font-black text-[#f0ebd8] mb-8">
+                Pronto para evoluir seu projeto?
+              </h2>
 
-              <div className="bg-[#1d2d44]/70 border border-[#3e5c76] rounded-3xl p-8 backdrop-blur-md">
-                <h3 className="text-2xl font-bold mb-3 text-[#f0ebd8]">Lighting and materials</h3>
-                <p className="text-[#d9e2ec] leading-relaxed">
-                  Lighting, BRDFs, post-processing, and materials designed to give each project a visual identity.
-                </p>
-              </div>
+              <p className="text-lg text-[#d9e2ec] mb-12 leading-relaxed">
+                Integrate shaders de alta qualidade e efeitos visuais avançados no seu projeto.
+                Soluções técnicas, suporte completo e resultados mensuráveis.
+              </p>
 
-              <div className="bg-[#1d2d44]/70 border border-[#3e5c76] rounded-3xl p-8 backdrop-blur-md">
-                <h3 className="text-2xl font-bold mb-3 text-[#f0ebd8]">Optimization</h3>
-                <p className="text-[#d9e2ec] leading-relaxed">
-                  Tuning to preserve real-time fluidity without sacrificing visual quality.
-                </p>
+              <div className="flex gap-4 justify-center flex-wrap">
+                <a
+                  href="index.html"
+                  className="px-8 py-4 rounded-xl bg-[#f0ebd8] text-[#0d1321] font-bold hover:scale-110 transition-transform"
+                >
+                  Ver Produtos
+                </a>
+
+                <a
+                  href="mailto:seuemail@exemplo.com"
+                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all"
+                >
+                  Email
+                </a>
+                <a
+                  href="https://discord.com/invite/BZrMdfNfQp"
+                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all inline-flex items-center gap-2"
+                >
+                  <img src="assets/icons/icon_discord.png" alt="" aria-hidden="true" className="w-5 h-5" />
+                  Discord
+                </a>
+                <a
+                  href="https://www.youtube.com/@NautStudios"
+                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all inline-flex items-center gap-2"
+                >
+                  <img src="assets/icons/icon_youtube.png" alt="" aria-hidden="true" className="w-5 h-5" />
+                  YouTube
+                </a>
               </div>
             </div>
           </motion.section>
 
-          <motion.section
-            id="contato"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.7 }}
-            className="relative z-10 max-w-full mx-auto px-6 py-24 text-center bg-[#0d1321]/75 backdrop-blur-[10px]"
-          >
-            <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#f0ebd8]">
-              Ready to talk about your shader?
-            </h2>
-
-            <p className="text-[#d9e2ec] text-lg leading-relaxed max-w-2xl mx-auto">
-              The main page presents the work of the GLSL and OpenGL developer; the store brings together the items
-              available for sale. The two spaces stay connected to make navigation easier for the client.
-            </p>
-
-            <div className="mt-10 flex justify-center gap-4 flex-wrap">
-              <a
-                href="index.html"
-                className="px-6 py-3 rounded-2xl bg-[#f0ebd8] text-[#0d1321] font-semibold hover:scale-105 transition-transform"
-              >
-                View products
-              </a>
-
-              <a
-                href="mailto:seuemail@exemplo.com"
-                className="px-6 py-3 rounded-2xl border border-[#748cab]/50 bg-[#1d2d44]/40 hover:border-[#f0ebd8] transition-colors"
-              >
-                Contact by email
-              </a>
-              <a
-                href="https://discord.com/invite/BZrMdfNfQp"
-                className="px-6 py-3 rounded-2xl border border-[#748cab]/50 bg-[#1d2d44]/40 hover:border-[#f0ebd8] transition-colors inline-flex items-center gap-2"
-              >
-                <img src="assets/icons/icon_discord.png" alt="" aria-hidden="true" className="w-5 h-5" />
-                Discord
-              </a>
-              <a
-                href="https://www.youtube.com/@NautStudios"
-                className="px-6 py-3 rounded-2xl border border-[#748cab]/50 bg-[#1d2d44]/40 hover:border-[#f0ebd8] transition-colors inline-flex items-center gap-2"
-              >
-                <img src="assets/icons/icon_youtube.png" alt="" aria-hidden="true" className="w-5 h-5" />
-                Youtube
-              </a>
+          {/* FOOTER */}
+          <footer className="relative z-10 border-t border-[#3e5c76] py-12 px-6 text-center text-[#d9e2ec] text-sm bg-[#0d1321]/45 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto">
+              <p className="mb-4">© 2026 Naut Store — Portfólio de um desenvolvedor de shaders moderno.</p>
+              <div className="flex justify-center gap-6 text-xs text-[#748cab]">
+                <span>GLSL</span>
+                <span>OpenGL</span>
+                <span>Three.js</span>
+                <span>Godot</span>
+              </div>
             </div>
-          </motion.section>
-
-          <footer className="relative z-10 border-t border-[#3e5c76] py-8 text-center text-[#d9e2ec] text-sm bg-[#0d1321]/45 backdrop-blur-[1px]">
-            © 2026 Naut Store — Main page and store connected.
           </footer>
         </div>
       );
