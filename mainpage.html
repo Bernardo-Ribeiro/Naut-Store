@@ -1,945 +1,770 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naut Store | Main Page</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    ::-webkit-scrollbar {
-      width: 12px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(13, 19, 33, 0.8);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(
-        180deg,
-        #2db8d1,
-        #748cab
-      );
-      border-radius: 999px;
-      border: 2px solid #0d1321;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      box-shadow:
-        0 0 10px rgba(77, 217, 230, 0.5),
-        0 0 20px rgba(77, 217, 230, 0.3);
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    h1, h2, h3 {
-      font-family: 'Outfit', sans-serif;
-    }
-
-    body, p {
-      font-family: 'Inter', sans-serif;
-    }
-
-    #canvas-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      z-index: -1;
-    }
-
-    .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #2db8d1, #4dd9e6, #2db8d1);
-      z-index: 100;
-      will-change: width;
-    }
-
-    .glow-text {
-      background: linear-gradient(135deg, #748cab, #f0ebd8, #748cab);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: glow-flicker 3s infinite;
-    }
-
-    @keyframes glow-flicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.85; }
-    }
-
-    .float-animation {
-      animation: float-smooth 6s ease-in-out infinite;
-    }
-
-    @keyframes float-smooth {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-
-    .reveal-text {
-      opacity: 0;
-      animation: reveal-in 0.8s ease-out forwards;
-    }
-
-    @keyframes reveal-in {
-      0% { 
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      100% { 
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .card-hover {
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-      position: relative;
-    }
-
-    .card-hover:hover {
-      transform: translateY(-15px);
-    }
-
-    .card-hover::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #748cab, transparent);
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-
-    .card-hover:hover::before {
-      opacity: 1;
-    }
-
-    .tech-grid {
-      display: grid;
-      gap: 1px;
-      background: linear-gradient(135deg, rgba(116, 140, 171, 0.2), rgba(248, 235, 216, 0.1));
-      padding: 1px;
-      border-radius: 1.5rem;
-    }
-
-    .tech-grid > * {
-      background: #0d1321;
-      border-radius: calc(1.5rem - 2px);
-    }
-
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #748cab, transparent);
-      margin: 0rem 0;
-    }
-
-    .cursor-glow {
-      position: fixed;
-      width: 300px;
-      height: 300px;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.6;
-      background: radial-gradient(circle, rgba(77, 217, 230, 0.5) 0%, transparent 70%);
-      border-radius: 50%;
-      mix-blend-mode: screen;
-      filter: blur(40px);
-      will-change: transform;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-      }
-    }
-  </style>
-</head>
-<body class="bg-[#0a1929] text-[#f0ebd8] font-sans overflow-x-hidden">
-  <div class="cursor-glow" id="cursor-glow"></div>
-  <div class="scroll-progress" id="scroll-progress"></div>
-  <div id="canvas-container"></div>
-  <div id="root"></div>
-
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/framer-motion@11.18.2/dist/framer-motion.js"></script>
-
-  <script>
-    // THREE.JS SHADER BACKGROUND
-    let scene, camera, renderer, mesh, uniforms;
-    let mouseX = 0, mouseY = 0;
-    let scrollProgress = 0;
-
-    function initThreeJS() {
-      // Scene setup
-      scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera(
-        -1, 1,
-        1, -1,
-        0, 1
-      );
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setClearColor(0x051a3d, 1);
-      document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-      // Vertex Shader
-      const vertexShader = `
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = vec4(position.xy, 0.0, 1.0);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naut Games Studio - GLSL & OpenGL</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/futura-display" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                        futura: ['"Futura Display"', 'Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#9E23FF',
+                        'primary-hover': '#B34DFF',
+                        'primary-active': '#8714E8',
+                        bg: '#0B0812',
+                        bgSecondary: '#12101A',
+                        surface: '#1C0032',
+                        surfaceHover: '#24103F',
+                        border: '#30204A',
+                        divider: '#45335E',
+                        text: '#FFFFFF',
+                        textSecondary: '#D0C7E3',
+                        muted: '#9787B5',
+                        cyan: '#00E5FF',
+                        blue: '#37CFFF',
+                        pink: '#FF4ED8',
+                        accent: '#9E23FF',
+                        accent2: '#00E5FF',
+                        darkPanel: '#1C0032'
+                    }
+                }
+            }
         }
-      `;
+    </script>
 
-      // Fragment Shader - Underwater Water Effect (Naut)
-      const fragmentShader = `
-      uniform float time;
-      uniform vec2 mouse;
-      uniform vec2 resolution;
-      uniform float scrollProgress;
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-      varying vec2 vUv;
+    <style>
+        /* Base styles & Resets */
+        body {
+            background-color: #0B0812;
+            color: #FFFFFF;
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-      float hash(vec2 p) {
-          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-      }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0812;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #9E23FF, #ff37cd);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom, #781fbd, #ff37cd);
+        }
 
-      float noise(vec2 p) {
-          vec2 i = floor(p);
-          vec2 f = fract(p);
+        /* Background Canvas */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+        }
 
-          f = f * f * (3.0 - 2.0 * f);
+        /* Cursor Glow */
+        #cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(158, 35, 255, 0.5) 0%, rgba(255, 78, 216, 0.2) 60%, transparent 80%);
+            mix-blend-mode: screen;
+            filter: blur(40px);
+            pointer-events: none;
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
 
-          float a = hash(i);
-          float b = hash(i + vec2(1.0, 0.0));
-          float c = hash(i + vec2(0.0, 1.0));
-          float d = hash(i + vec2(1.0, 1.0));
+        /* Scroll Progress */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(to right, #9E23FF, #B34DFF, #FF4ED8);
+            width: 0%;
+            z-index: 1000;
+        }
 
-          return mix(
-              mix(a, b, f.x),
-              mix(c, d, f.x),
-              f.y
-          );
-      }
+        /* Animations */
+        @keyframes glow-text {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glow-text {
+            background: linear-gradient(90deg, #B34DFF, #9E23FF, #FF4ED8);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: glow-text 4s linear infinite;
+        }
 
-      float fbm(vec2 p) {
-          float v = 0.0;
-          float a = 0.5;
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-animation {
+            animation: float 4s ease-in-out infinite;
+        }
 
-          for(int i = 0; i < 5; i++) {
-              v += noise(p) * a;
-              p *= 2.0;
-              a *= 0.5;
-          }
+        /* Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
 
-          return v;
-      }
+        /* Card Hover */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(158, 35, 255, 0.3);
+            border-color: #9E23FF;
+        }
 
-      void main() {
+        /* Divider */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(158, 35, 255, 0.3), transparent);
+            width: 100%;
+            margin: 4rem 0;
+        }
 
-          vec2 uv = vUv;
+        .animated-divider-line {
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(158, 35, 255, 0) 15%, 
+                #9E23FF 50%, 
+                rgba(0, 229, 255, 0) 85%, 
+                transparent 100%
+            );
+            background-size: 200% 100%;
+            animation: dividerShimmer 3.5s linear infinite;
+        }
 
-          // Aspect correction
-          vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
+        @keyframes dividerShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }@media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-accent selection:text-bg">
 
-          // Deep flow movement
-          vec2 p = uv * 2.5;
+    <!-- Scroll Progress -->
+    <div id="scroll-progress"></div>
 
-          p.x += sin(time * 0.08 + p.y * 1.5) * 0.08;
-          p.y += cos(time * 0.06 + p.x * 1.2) * 0.08;
+    <!-- Cursor Glow -->
+    <div id="cursor-glow"></div>
 
-          float n1 = fbm(p + time * 0.03);
-          float n2 = fbm(p * 1.8 - time * 0.02);
+    <!-- Background Canvas -->
+    <div id="canvas-container"></div>
 
-          float pattern = mix(n1, n2, 0.5);
-
-          vec3 deep = vec3(0.015, 0.03, 0.07);
-          vec3 mid  = vec3(0.03, 0.09, 0.18);
-          vec3 soft = vec3(0.08, 0.22, 0.38);
-
-          vec3 col = mix(deep, mid, pattern);
-          col = mix(col, soft, smoothstep(0.45, 0.9, pattern) * 0.35);
-
-          float vignette = 1.0 - length(uv - 0.5) * 0.9;
-          col *= vignette;
-
-          vec2 m = (uv - mouse) * aspect;
-
-          float dist = length(m);
-
-          float glow =
-              exp(-dist * 60.0) * 0.2;
-
-          float core =
-              exp(-dist * 100.0);
-
-          float ripple =
-              sin(dist * 20.0 - time * 2.5) *
-              exp(-dist * 10.0);
-
-          vec3 mouseColor =
-              vec3(0.25, 0.65, 1.0) * glow +
-              vec3(0.6, 0.85, 1.0) * core +
-              vec3(0.15, 0.35, 0.8) * ripple * 0.15;
-
-          col += mouseColor;
-
-          col += sin(time + uv.y * 8.0) * 0.02;
-
-          col = pow(col, vec3(1.2));
-
-          gl_FragColor = vec4(col, 1.0);
-      }
-      `;
-
-      uniforms = {
-        time: { value: 0.0 },
-        mouse: { value: new THREE.Vector2(0.5, 0.5) },
-        scrollProgress: { value: 0.0 },
-        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-      };
-
-      const material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-        transparent: false,
-        depthWrite: false
-      });
-
-      const geometry = new THREE.PlaneGeometry(2, 2);
-      mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-
-      // Mouse tracking
-      document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX / window.innerWidth;
-        mouseY = 1.0 - (e.clientY / window.innerHeight);
-        uniforms.mouse.value.set(mouseX, mouseY);
-      });
-
-      // Scroll tracking
-      window.addEventListener('scroll', () => {
-        scrollProgress = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-        uniforms.scrollProgress.value = scrollProgress;
-      });
-
-      // Window resize
-      window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-
-        uniforms.resolution.value.set(
-          window.innerWidth,
-          window.innerHeight
-        );
-      });
-
-      animate();
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      uniforms.time.value += 0.016;
-      renderer.render(scene, camera);
-    }
-
-    // Cursor glow tracking
-    function initCursorGlow() {
-      const glow = document.getElementById('cursor-glow');
-      document.addEventListener('mousemove', (e) => {
-        glow.style.transform = `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`;
-      });
-    }
-
-    // Scroll progress bar
-    function initScrollProgress() {
-      const progressBar = document.getElementById('scroll-progress');
-      window.addEventListener('scroll', () => {
-        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-        progressBar.style.width = scrolled + '%';
-      });
-    }
-
-    // Intersection Observer for scroll animations
-    function initScrollAnimations() {
-      const elements = document.querySelectorAll('[data-reveal]');
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.animationDelay = entry.target.dataset.delay || '0s';
-            entry.target.classList.add('reveal-text');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-
-      elements.forEach(el => observer.observe(el));
-    }
-
-    window.addEventListener('load', () => {
-      initThreeJS();
-      initCursorGlow();
-      initScrollProgress();
-      setTimeout(initScrollAnimations, 100);
-    });
-  </script>
-
-  <script type="text/babel" data-presets="react">
-    const { motion } = Motion;
-
-    function MainPage() {
-      const servicos = [
-        {
-          titulo: "Voxel Cone Tracing (VCT)",
-          descricao: "Global illumination technique based on scene voxelization and multi-axis cone tracing. Allows smooth indirect lighting, diffuse reflections, and dynamic light propagation in real-time.",
-          imagem: "https://leadwerksstorage.s3.us-east-2.amazonaws.com/monthly_2018_06/dc8_f.jpg.192ca743ab41e08cd42b8ba1a24d9a26.jpg",
-          delay: 0,
-        },
-        {
-          titulo: "Screen Space Global Illumination (SSGI)",
-          descricao: "Real-time global illumination system based on screen space, using raymarching and temporal accumulation to simulate indirect light bounces. Developed with a focus on balancing visual quality and performance.",
-          imagem: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTFiZWcyb291ZmdyYjBkd215Nmc0NXIxejIwZXRkNTg4N3doaGc4cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5wWf7Hg7xve0LYdLhxC/giphy.gif",
-          delay: 0.1,
-        },
-        {
-          titulo: "Temporal Anti-Aliasing (TAA)",
-          descricao: "Temporal anti-aliasing shader with reprojection and accumulation between frames to smooth jagged edges and reduce noise from effects like SSGI and screen space reflections.",
-          imagem: "https://images.digitalfoundry.net/239670e0ae8c5/1280x720.jpg",
-          delay: 0.2,
-        },
-        {
-          titulo: "Screen Space Ambient Occlusion (SSAO)",
-          descricao: "Screen space ambient occlusion shader that adds depth and surface contact by simulating indirect shadows in regions less exposed to light.",
-          imagem: "https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/hbao%2Bindoor-shadows-850w-480h.jpg",
-          delay: 0.3,
-        },
-        {
-          titulo: "Cinematic Lens Flare",
-          descricao: "Post-processing effect that simulates optical dispersion of real lenses, using multiple layers, ghosting, and bloom to create a dynamic cinematic aesthetic.",
-          imagem: "https://www.shutterstock.com/shutterstock/videos/27574162/thumb/10.jpg?ip=x480",
-          delay: 0.4,
-        },
-        {
-          titulo: "Volumetric Lighting",
-          descricao: "Volumetric lighting shader that simulates light beams passing through particles in the environment, creating atmospheric effects like illuminated fog, god rays, and real-time cinematic depth.",
-          imagem: "https://media.licdn.com/dms/image/v2/D5612AQFDfD__-ZkPJA/article-cover_image-shrink_720_1280/B56ZnGecXhJ8AI-/0/1759971495051?e=2147483647&v=beta&t=Afddz-2-1Mmo34P_OpvBR1lka0zhxaKGxXeLF3c2CFE",
-          delay: 0.5,
-        },
-      ];
-
-      React.useEffect(() => {
-        const cards = document.querySelectorAll('[data-reveal]');
-        cards.forEach((card, idx) => {
-          card.style.setProperty('--delay', `${servicos[idx]?.delay || 0}s`);
-        });
-      }, []);
-      const showcaseRef = React.useRef(null);
-
-      const { scrollYProgress } = Motion.useScroll({
-        target: showcaseRef,
-      });
-
-      const scrollX = Motion.useTransform(
-        scrollYProgress,
-        [0, 1],
-        ["0%", "-81%"]
-      );
-
-      return (
-        <div className="relative min-h-screen text-[#f0ebd8] font-sans">
-          {/* HERO SECTION */}
-          <header className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20 pb-20">
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-20 right-10 w-72 h-72 bg-[#2db8d1] rounded-full mix-blend-screen filter blur-3xl opacity-30" />
-              <div className="absolute bottom-20 left-10 w-72 h-72 bg-[#2db8d1] rounded-full mix-blend-screen filter blur-3xl opacity-30" />
+    <main class="relative z-10 w-full">
+        
+        <!-- Hero Section -->
+        <section class="min-h-screen flex flex-col justify-center items-center px-4 relative pt-20">
+            <div class="max-w-5xl w-full text-center flex flex-col items-center">
+                <div class="reveal inline-block px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent font-futura text-base tracking-[0.15em] mb-8">
+                    NAUT GAMES STUDIO
+                </div>
+                
+                <h1 class="reveal reveal-delay-1 font-outfit text-6xl md:text-8xl lg:text-9xl font-black uppercase mb-6 leading-none">
+                    <span class="glow-text drop-shadow-[0_0_20px_rgba(158,35,255,0.7)] drop-shadow-[0_0_40px_rgba(255,78,216,0.4)]">GLSL & OpenGL</span>
+                </h1>
+                
+                <p class="reveal reveal-delay-2 text-muted2 text-lg md:text-2xl max-w-3xl mb-12 font-light">
+                    Dynamic shaders, <span class="text-accent font-semibold">real-time effects</span>, and cinematic rendering for next-generation digital experiences.
+                </p>
+                
+                <div class="reveal reveal-delay-3 flex flex-col sm:flex-row gap-6">
+                    <a href="index.html" class="px-8 py-4 bg-accent text-bg font-bold rounded-lg hover:bg-white transition-colors duration-300 text-lg shadow-[0_0_25px_rgba(158,35,255,0.5)]">
+                        Explore Store
+                    </a>
+                    <a href="#contato" class="px-8 py-4 border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-colors duration-300 text-lg">
+                        Get in Touch
+                    </a>
+                </div>
             </div>
-
-            <div className="relative max-w-5xl text-center z-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="mb-6"
-              >
-                <span className="text-xs uppercase tracking-[0.4em] text-[#2db8d1] font-medium">Naut Games Studio</span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.4 }}
-                className="text-6xl md:text-8xl font-black leading-tight mb-8 glow-text"
-              >
-                GLSL & OpenGL
-              </motion.h1>
-
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.6 }}
-                className="text-xl md:text-2xl text-[#d9e2ec] mb-10 leading-relaxed max-w-3xl mx-auto"
-              >
-                Dynamic shaders, real-time effects, and visual integration for modern engines.
-                <br />
-                <span className="text-[#4dd9e6]">Technique. Precision. Innovation.</span>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-                className="flex gap-4 justify-center flex-wrap mb-16"
-              >
-                <a
-                  href="index.html"
-                  className="px-8 py-4 rounded-xl bg-[#4dd9e6] text-[#051a3d] font-bold hover:scale-110 transition-transform duration-300 shadow-2xl shadow-[#2db8d1]/25"
-                >
-                  Explore Store
-                </a>
-
-                <a
-                  href="#contato"
-                  className="px-8 py-4 rounded-xl border-2 border-[#2db8d1] bg-transparent text-[#f0ebd8] font-bold hover:bg-[#2db8d1]/10 transition-all duration-300"
-                >
-                  Get in Touch
-                </a>
-              </motion.div>
-
-              {/* Scroll indicator */}
-              <motion.div
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ opacity: 1, y: [0, 10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: 1.2 }}
-                className="flex justify-center"
-              >
-                <svg className="w-6 h-6 text-[#4dd9e6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 float-animation reveal reveal-delay-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent opacity-70">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <polyline points="19 12 12 19 5 12"></polyline>
                 </svg>
-              </motion.div>
             </div>
-          </header>
+        </section>
 
-          <div className="section-divider"></div>
+        <!-- Divider -->
+        <div class="section-divider"></div>
 
-          {/* MANIFESTO SECTION */}
-          <section
-            id="manifesto"
-            className="relative z-10 min-h-screen flex items-center justify-center px-6 overflow-hidden"
-          >
-            <div className="max-w-[1800px] mx-auto w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-              >
-                <span className="block text-xs uppercase tracking-[0.8em] text-[#748cab] font-medium text-center">
-                  Studio
-                </span>
-
-                <h2
-                  className="
-                    mt-6
-                    text-center
-                    font-black
-                    uppercase
-                    leading-[0.88]
-                    tracking-[-0.05em]
-                    text-[#f0ebd8]
-                    font-['Outfit']
-
-                    text-[2rem]
-                    sm:text-[3rem]
-                    md:text-[4rem]
-                    lg:text-[5rem]
-                    xl:text-[7.5rem]
-                  "
-                >
-                  Redefining
-                  <span className="text-[#4dd9e6]"> Real-Time </span>
-                  Rendering.
-                  <br />
-
-                  Building
-                  <span className="text-[#4dd9e6]"> Cinematic </span>
-                  Shaders,
-                  <br />
-
-                  Lighting And
-                  <span className="text-[#4dd9e6]"> Atmosphere </span>
-                  For
-                  <br />
-
-                  Next-Generation
-                  Digital Worlds.
+        <!-- Manifesto Section -->
+        <section class="min-h-screen flex flex-col justify-center px-4 md:px-8 py-12">
+            <div class="w-full max-w-[1600px] mx-auto text-center">
+                <div class="reveal text-accent text-sm font-bold uppercase tracking-widest mb-6">
+                    Studio
+                </div>
+                <h2 class="reveal reveal-delay-1 font-outfit text-[clamp(1.5rem,5.5vw,6.5rem)] font-black uppercase leading-[1.1] text-white">
+                    Redefining <span class="text-accent">Real-Time</span> Rendering. Building <span class="text-accent">Cinematic</span> Shaders, Lighting And <span class="text-accent">Atmosphere</span> For Next-Generation Digital Worlds.
                 </h2>
-              </motion.div>
             </div>
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#2db8d1] rounded-full blur-[140px]" />
-            </div>
-          </section>
+        </section>
 
-          {/* SHADER SHOWCASE */}
-          <section
-            ref={showcaseRef}
-            className="relative h-[500vh]"
-          >
-            <div className="sticky top-0 h-screen overflow-hidden flex items-center">
+        <!-- Divider -->
+        <div class="section-divider"></div>
 
-              {/* Background glow */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[#2db8d1]/10 rounded-full blur-[180px]" />
-              </div>
-
-              <motion.div
-                style={{
-                  x: scrollX,
-                }}
-                className="flex gap-10 px-[10vw]"
-              >
-
-                {servicos.map((item, index) => (
-                  <div
-                    key={item.titulo}
-                    className="
-                      relative
-                      min-w-[85vw]
-                      h-[80vh]
-                      rounded-[2rem]
-                      overflow-hidden
-                      border border-[#3e5c76]/40
-                      bg-[#0d1321]/60
-                      backdrop-blur-xl
-                      flex
-                      items-end
-                      group
-                    "
-                  >
-
-                    {/* IMAGE */}
-                    <img
-                      src={item.imagem}
-                      alt={item.titulo}
-                      className="
-                        absolute inset-0
-                        w-full h-full
-                        object-cover
-                        group-hover:scale-105
-                        transition-transform
-                        duration-700
-                      "
-                    />
-
-                    {/* OVERLAY */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a1929] via-[#0a1929]/40 to-transparent" />
-
-                    {/* CONTENT */}
-                    <div className="relative z-10 p-12 max-w-3xl">
-                      <span className="text-[#4dd9e6] uppercase tracking-[0.3em] text-xs">
-                        Shader System
-                      </span>
-
-                      <h3 className="text-5xl md:text-7xl font-black mt-4 mb-6 text-[#f0ebd8]">
-                        {item.titulo}
-                      </h3>
-
-                      <p className="text-lg md:text-xl text-[#d9e2ec] leading-relaxed">
-                        {item.descricao}
-                      </p>
+        <!-- Shader Showcase (Horizontal Scroll) -->
+        <section id="horizontal-scroll-section" style="height: 650vh;">
+            <div class="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+                <div id="horizontal-track" class="flex gap-8 px-12 md:px-24 w-max transition-transform duration-100 ease-out will-change-transform">
+                    
+                    <!-- Card 1 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://leadwerksstorage.s3.us-east-2.amazonaws.com/monthly_2018_06/dc8_f.jpg.192ca743ab41e08cd42b8ba1a24d9a26.jpg" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="VCT">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">01</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Voxel Cone Tracing (VCT)</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Global illumination technique based on scene voxelization and multi-axis cone tracing. Allows smooth indirect lighting, diffuse reflections, and dynamic light propagation in real-time.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-1/6"></div>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                ))}
 
-              </motion.div>
-            </div>
-          </section>
+                    <!-- Card 2 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTFiZWcyb291ZmdyYjBkd215Nmc0NXIxejIwZXRkNTg4N3doaGc4cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5wWf7Hg7xve0LYdLhxC/giphy.gif" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="SSGI">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">02</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Screen Space Global Illumination (SSGI)</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Real-time global illumination system based on screen space, using raymarching and temporal accumulation to simulate indirect light bounces. Developed with a focus on balancing visual quality and performance.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-2/6"></div>
+                            </div>
+                        </div>
+                    </div>
 
-          <div className="section-divider"></div>
+                    <!-- Card 3 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://images.unsplash.com/photo-1617042375876-a13e36732a04?w=1280&h=720&fit=crop" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="TAA">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">03</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Temporal Anti-Aliasing (TAA)</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Temporal anti-aliasing shader with reprojection and accumulation between frames to smooth jagged edges and reduce noise from effects like SSGI and screen space reflections.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-3/6"></div>
+                            </div>
+                        </div>
+                    </div>
 
-          {/* SKILLS SECTION */}
-          <section className="relative z-10 py-40 px-6">
-            <div className="max-w-[1600px] mx-auto">
+                    <!-- Card 4 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/hbao%2Bindoor-shadows-850w-480h.jpg" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="SSAO">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">04</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Screen Space Ambient Occlusion (SSAO)</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Screen space ambient occlusion shader that adds depth and surface contact by simulating indirect shadows in regions less exposed to light.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-4/6"></div>
+                            </div>
+                        </div>
+                    </div>
 
-              <div className="grid lg:grid-cols-[420px_1fr] gap-16">
+                    <!-- Card 5 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://www.shutterstock.com/shutterstock/videos/27574162/thumb/10.jpg?ip=x480" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="Cinematic Lens Flare">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">05</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Cinematic Lens Flare</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Post-processing effect that simulates optical dispersion of real lenses, using multiple layers, ghosting, and bloom to create a dynamic cinematic aesthetic.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-5/6"></div>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* LADO ESQUERDO */}
-                <div className="lg:sticky lg:top-32 h-fit">
-
-                  <span className="text-xs uppercase tracking-[0.4em] text-[#748cab] font-medium">
-                    Skills
-                  </span>
-
-                  <motion.h2
-                    className="mt-6 text-6xl lg:text-7xl font-black leading-[0.9] text-[#f0ebd8]"
-                  >
-                    {"Areas of".split(" ").map((word, i) => (
-                      <motion.span
-                        key={i}
-                        initial={{ opacity: 0, y: 40 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.6,
-                          delay: i * 0.15
-                        }}
-                        className="inline-block mr-4"
-                      >
-                        {word}
-                      </motion.span>
-                    ))}
-
-                    <br />
-
-                    <motion.span
-                      initial={{
-                        opacity: 0,
-                        filter: "blur(12px)"
-                      }}
-                      whileInView={{
-                        opacity: 1,
-                        filter: "blur(0px)"
-                      }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 1,
-                        delay: 0.4
-                      }}
-                      className="text-[#4dd9e6]"
-                    >
-                      Expertise
-                    </motion.span>
-                  </motion.h2>
-
-                  <div className="w-20 h-[2px] bg-[#4dd9e6] mt-8 mb-8" />
-
-                  <p className="text-[#d9e2ec] text-lg leading-relaxed">
-                    Advanced graphics solutions that unite
-                    real-time rendering, optimization,
-                    and visual direction for high-quality projects.
-                  </p>
+                    <!-- Card 6 -->
+                    <div class="relative w-[85vw] h-[80vh] rounded-[2rem] overflow-hidden group shrink-0 flex items-end p-8 md:p-16 border border-border">
+                        <img src="https://media.licdn.com/dms/image/v2/D5612AQFDfD__-ZkPJA/article-cover_image-shrink_720_1280/B56ZnGecXhJ8AI-/0/1759971495051?e=2147483647&v=beta&t=Afddz-2-1Mmo34P_OpvBR1lka0zhxaKGxXeLF3c2CFE" class="absolute inset-0 w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700 z-0" alt="Volumetric Lighting">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent z-10"></div>
+                        <div class="absolute top-8 right-8 md:top-12 md:right-12 text-accent font-outfit text-4xl md:text-6xl font-black z-20">06</div>
+                        <div class="relative z-20 max-w-4xl">
+                            <div class="inline-block px-3 py-1 border border-accent/50 rounded-full text-accent text-sm mb-4 backdrop-blur-md">Shader System</div>
+                            <h3 class="font-outfit text-5xl md:text-7xl font-black mb-6 text-white">Volumetric Lighting</h3>
+                            <p class="text-lg md:text-xl text-muted2 mb-8 leading-relaxed">Volumetric lighting shader that simulates light beams passing through particles in the environment, creating atmospheric effects like illuminated fog, god rays, and real-time cinematic depth.</p>
+                            <div class="w-full h-1 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent w-full"></div>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
+            </div>
+        </section>
 
-                {/* CARDS */}
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <!-- Divider -->
+        <div class="section-divider"></div>
 
-                  {[
-                    {
-                      titulo: "Graphics Pipeline",
-                      desc: "Optimization of render passes and integration with modern engines.",
-                      imagem: "assets/pipeline.jpg",
-                    },
-                    {
-                      titulo: "Lighting & Materials",
-                      desc: "BRDFs, PBR, and advanced dynamic lighting systems.",
-                      imagem: "assets/lighting.jpg",
-                    },
-                    {
-                      titulo: "Post-Processing",
-                      desc: "Bloom, tone mapping, and cinematic effects.",
-                      imagem: "assets/post.jpg",
-                    },
-                    {
-                      titulo: "Performance",
-                      desc: "Maximum visual quality with minimum computational cost.",
-                      imagem: "assets/performance.jpg",
-                    },
-                    {
-                      titulo: "Temporal Stability",
-                      desc: "TAA, reprojection, and multi-frame accumulation.",
-                      imagem: "assets/taa.jpg",
-                    },
-                    {
-                      titulo: "Godot & Custom Engines",
-                      desc: "Integration with multiple engines and pipelines.",
-                      imagem: "assets/godot.jpg",
-                    },
-                  ].map((skill, idx) => (
-
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 40 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: idx * 0.08 }}
-                      className="
-                        group
-                        relative
-                        overflow-hidden
-                        rounded-[28px]
-                        border
-                        border-[#3e5c76]/30
-                        bg-[#0d1321]/50
-                        backdrop-blur-xl
-                        hover:border-[#4dd9e6]/50
-                        transition-all
-                        duration-500
-                      "
-                    >
-
-                      {/* NUMERO */}
-                      <div className="absolute top-6 left-6 z-20 text-3xl font-black text-[#4dd9e6]">
-                        {(idx + 1).toString().padStart(2, "0")}
-                      </div>
-
-                      {/* IMAGEM */}
-                      <div className="h-56 overflow-hidden">
-
-                        <img
-                          src={skill.imagem}
-                          alt=""
-                          className="
-                            w-full
-                            h-full
-                            object-cover
-                            group-hover:scale-110
-                            transition-transform
-                            duration-700
-                          "
-                        />
-
-                      </div>
-
-                      {/* CONTEÚDO */}
-                      <div className="p-8">
-
-                        <h3 className="text-2xl font-bold text-[#f0ebd8] mb-4">
-                          {skill.titulo}
-                        </h3>
-
-                        <p className="text-[#d9e2ec] leading-relaxed">
-                          {skill.desc}
+        <!-- Skills Section -->
+        <section class="py-24 px-4 md:px-12 lg:px-24">
+            <div class="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-16">
+                <!-- Left Sticky Column -->
+                <div class="lg:w-[420px] shrink-0">
+                    <div class="sticky top-32">
+                        <div class="reveal text-accent text-sm font-bold uppercase tracking-widest mb-4">Skills</div>
+                        <h2 class="reveal reveal-delay-1 font-outfit text-5xl md:text-6xl font-black mb-6">Areas of <span class="text-accent">Expertise</span></h2>
+                        <div class="reveal reveal-delay-2 w-16 h-1 bg-accent mb-8"></div>
+                        <p class="reveal reveal-delay-3 text-muted2 text-lg mb-10 leading-relaxed">
+                            Specialized in real-time graphics programming, from raw WebGL & OpenGL to integration with modern game engines.
                         </p>
-
-                      </div>
-
-                      {/* GLOW */}
-                      <div
-                        className="
-                          absolute
-                          inset-0
-                          opacity-0
-                          group-hover:opacity-100
-                          transition-opacity
-                          duration-500
-                          pointer-events-none
-                        "
-                      >
-                        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#2db8d1]/20 rounded-full blur-[100px]" />
-                      </div>
-
-                    </motion.div>
-
-                  ))}
-
+                        
+                        <div class="space-y-6">
+                            <div class="reveal reveal-delay-2">
+                                <div class="flex justify-between text-sm mb-2"><span class="font-bold">GLSL Shaders</span><span class="text-accent">Expert</span></div>
+                                <div class="w-full h-2 bg-darkPanel rounded-full"><div class="w-[95%] h-full bg-accent rounded-full"></div></div>
+                            </div>
+                            <div class="reveal reveal-delay-3">
+                                <div class="flex justify-between text-sm mb-2"><span class="font-bold">Range Engine & BGE</span><span class="text-accent">Ultra-Advanced</span></div>
+                                <div class="w-full h-2 bg-darkPanel rounded-full"><div class="w-[100%] h-full bg-accent rounded-full"></div></div>
+                            </div>
+                            <div class="reveal reveal-delay-4">
+                                <div class="flex justify-between text-sm mb-2"><span class="font-bold">Engine Integration</span><span class="text-accent">Professional</span></div>
+                                <div class="w-full h-2 bg-darkPanel rounded-full"><div class="w-[90%] h-full bg-accent rounded-full"></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-              </div>
+                <!-- Right Grid Column -->
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Skill Card 1 -->
+                    <div class="reveal card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">01</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Graphics Pipeline">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Graphics Pipeline</h4>
+                        <p class="text-muted2 text-sm mb-6">Optimization of render passes and integration with modern engines.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
 
+                    <!-- Skill Card 2 -->
+                    <div class="reveal reveal-delay-1 card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">02</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"></path></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Lighting & Materials">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Lighting & Materials</h4>
+                        <p class="text-muted2 text-sm mb-6">BRDFs, PBR, and advanced dynamic lighting systems.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+
+                    <!-- Skill Card 3 -->
+                    <div class="reveal reveal-delay-2 card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">03</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Post-Processing">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Post-Processing</h4>
+                        <p class="text-muted2 text-sm mb-6">Bloom, tone mapping, and cinematic effects.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+
+                    <!-- Skill Card 4 -->
+                    <div class="reveal reveal-delay-1 card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">04</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"></path><path d="M3.34 19a10 10 0 1 1 17.32 0"></path></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Performance">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Performance</h4>
+                        <p class="text-muted2 text-sm mb-6">Maximum visual quality with minimum computational cost.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+
+                    <!-- Skill Card 5 -->
+                    <div class="reveal reveal-delay-2 card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">05</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Temporal Stability">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Temporal Stability</h4>
+                        <p class="text-muted2 text-sm mb-6">TAA, reprojection, and multi-frame accumulation.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+
+                    <!-- Skill Card 6 -->
+                    <div class="reveal reveal-delay-3 card-hover bg-darkPanel border border-border rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 text-muted/20 font-outfit text-6xl font-black transition-colors group-hover:text-accent/20">06</div>
+                        <div class="w-10 h-10 mb-4 text-accent flex items-center justify-center rounded-lg bg-accent/10 border border-accent/30 shadow-[0_0_15px_rgba(158,35,255,0.3)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        </div>
+                        <div class="h-32 mb-6 rounded-lg overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Range Engine & BGE Forks">
+                        </div>
+                        <h4 class="font-outfit text-xl font-bold mb-3">Range Engine & BGE Forks</h4>
+                        <p class="text-muted2 text-sm mb-6">Integration with multiple engines and pipelines.</p>
+                        <a href="#" class="inline-flex items-center text-accent text-sm font-bold hover:text-white transition-colors">
+                            Learn more <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+                </div>
             </div>
-          </section>
+        </section>
 
-          <div className="section-divider"></div>
+        <!-- Divider -->
+        <div class="section-divider"></div>
 
-          {/* CTA SECTION */}
-          <motion.section
-            id="contato"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.8 }}
-            className="relative z-10 py-32 px-6"
-          >
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-5xl md:text-7xl font-black text-[#f0ebd8] mb-8">
-                Ready to evolve your project?
-              </h2>
-
-              <p className="text-lg text-[#d9e2ec] mb-12 leading-relaxed">
-                Integrate high-quality shaders and advanced visual effects into your project.
-                Technical solutions, full support, and measurable results.
-              </p>
-
-              <div className="flex gap-4 justify-center flex-wrap">
-                <a
-                  href="index.html"
-                  className="px-8 py-4 rounded-xl bg-[#f0ebd8] text-[#0d1321] font-bold hover:scale-110 transition-transform"
-                >
-                  See Products
-                </a>
-
-                <a
-                  href="mailto:seuemail@exemplo.com"
-                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all"
-                >
-                  Email
-                </a>
-                <a
-                  href="https://discord.com/invite/BZrMdfNfQp"
-                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all inline-flex items-center gap-2"
-                >
-                  <img src="assets/icons/icon_discord.png" alt="" aria-hidden="true" className="w-5 h-5" />
-                  Discord
-                </a>
-                <a
-                  href="https://www.youtube.com/@NautStudios"
-                  className="px-8 py-4 rounded-xl border-2 border-[#748cab] text-[#f0ebd8] font-bold hover:bg-[#748cab]/20 transition-all inline-flex items-center gap-2"
-                >
-                  <img src="assets/icons/icon_youtube.png" alt="" aria-hidden="true" className="w-5 h-5" />
-                  YouTube
-                </a>
-              </div>
+        <!-- Contact Section -->
+        <section id="contato" class="min-h-[85vh] flex flex-col justify-center items-center py-24 px-4 relative">
+            <div class="absolute inset-0 bg-accent/5 backdrop-blur-3xl z-0 pointer-events-none"></div>
+            <div class="max-w-4xl mx-auto text-center relative z-10 w-full">
+                <div class="reveal text-accent text-sm font-bold uppercase tracking-widest mb-4">Get in Touch</div>
+                <h2 class="reveal reveal-delay-1 font-outfit text-5xl md:text-7xl font-black mb-8 glow-text">
+                    Ready to evolve your project?
+                </h2>
+                <p class="reveal reveal-delay-2 text-xl text-muted2 mb-12 max-w-2xl mx-auto">
+                    Whether you need a custom shader integration, optimization of your render pipeline, or visual enhancements, let's build it together.
+                </p>
+                
+                <div class="reveal reveal-delay-3 flex flex-wrap justify-center gap-4">
+                    <a href="index.html" class="px-8 py-4 bg-accent text-bg font-bold rounded-lg hover:bg-white transition-colors duration-300">
+                        See Products
+                    </a>
+                    <a href="mailto:contact@example.com" class="px-8 py-4 bg-darkPanel border border-border text-text font-bold rounded-lg hover:border-accent hover:text-accent transition-colors duration-300">
+                        Email
+                    </a>
+                    <a href="https://discord.com/invite/BZrMdfNfQp" target="_blank" rel="noopener" class="px-8 py-4 bg-darkPanel border border-border text-text font-bold rounded-lg hover:border-[#5865F2] hover:text-[#5865F2] transition-colors duration-300 flex items-center gap-2">
+                        <img src="assets/icons/icon_discord.png" alt="Discord" class="w-5 h-5 object-contain" onerror="this.style.display='none'"> Discord
+                    </a>
+                    <a href="https://www.youtube.com/@NautStudios" target="_blank" rel="noopener" class="px-8 py-4 bg-darkPanel border border-border text-text font-bold rounded-lg hover:border-[#FF0000] hover:text-[#FF0000] transition-colors duration-300 flex items-center gap-2">
+                        <img src="assets/icons/icon_youtube.png" alt="YouTube" class="w-5 h-5 object-contain" onerror="this.style.display='none'"> YouTube
+                    </a>
+                </div>
             </div>
-          </motion.section>
+        </section>
 
-          {/* FOOTER */}
-          <footer className="relative z-10 border-t border-[#3e5c76] py-12 px-6 text-center text-[#d9e2ec] text-sm bg-[#0d1321]/45 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto">
-              <p className="mb-4">© 2026 Naut Store — Portfolio of a modern shader developer.</p>
-              <div className="flex justify-center gap-6 text-xs text-[#748cab]">
-                <span>GLSL</span>
-                <span>OpenGL</span>
-                <span>Three.js</span>
-                <span>Godot</span>
-              </div>
+        <!-- Footer -->
+        <footer class="py-12 border-t border-border/50 bg-bg px-4 md:px-12">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="font-futura text-4xl tracking-normal">
+                    NAUT<span class="text-accent">.</span>
+                </div>
+                <div class="text-muted text-sm text-center md:text-left">
+                    © 2026 Naut Store — Portfolio of a modern shader developer.
+                </div>
+                <div class="flex gap-4 text-xs font-bold text-muted uppercase tracking-wider">
+                    <span>GLSL</span>
+                    <span class="text-border">|</span>
+                    <span>OpenGL</span>
+                    <span class="text-border">|</span>
+                    <span>Range Engine</span>
+                    <span class="text-border">|</span>
+                    <span>BGE Forks</span>
+                </div>
             </div>
-          </footer>
-        </div>
-      );
-    }
+        </footer>
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<MainPage />);
-  </script>
+    </main>
+
+    <!-- JavaScript for Animations and Three.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Intersection Observer for Reveal Animations ---
+            const revealElements = document.querySelectorAll('.reveal');
+            const revealOptions = {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            };
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, revealOptions);
+
+            revealElements.forEach(el => revealObserver.observe(el));
+
+            // --- Scroll Progress Bar ---
+            const scrollProgress = document.getElementById('scroll-progress');
+            window.addEventListener('scroll', () => {
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (winScroll / height) * 100;
+                scrollProgress.style.width = scrolled + '%';
+            });
+
+            // --- Cursor Glow ---
+            const cursorGlow = document.getElementById('cursor-glow');
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursorGlow.style.opacity = '1';
+                cursorGlow.style.left = mouseX + 'px';
+                cursorGlow.style.top = mouseY + 'px';
+            });
+            document.addEventListener('mouseleave', () => {
+                cursorGlow.style.opacity = '0';
+            });
+
+            // --- Horizontal Scroll Logic ---
+            const horizontalSection = document.getElementById('horizontal-scroll-section');
+            const horizontalTrack = document.getElementById('horizontal-track');
+
+            window.addEventListener('scroll', () => {
+                const rect = horizontalSection.getBoundingClientRect();
+                const sectionTop = rect.top;
+                const sectionHeight = rect.height;
+                const windowHeight = window.innerHeight;
+                
+                if (sectionTop <= 0 && sectionTop >= -(sectionHeight - windowHeight)) {
+                    const scrollProgress = Math.abs(sectionTop) / (sectionHeight - windowHeight);
+                    const trackScrollWidth = horizontalTrack.scrollWidth;
+                    const maxTranslate = trackScrollWidth - window.innerWidth;
+                    
+                    const translateX = scrollProgress * maxTranslate;
+                    horizontalTrack.style.transform = `translate3d(-${translateX}px, 0, 0)`;
+                } else if (sectionTop > 0) {
+                    horizontalTrack.style.transform = `translate3d(0, 0, 0)`;
+                } else {
+                    const trackScrollWidth = horizontalTrack.scrollWidth;
+                    const maxTranslate = trackScrollWidth - window.innerWidth;
+                    horizontalTrack.style.transform = `translate3d(-${maxTranslate}px, 0, 0)`;
+                }
+            });
+
+            // --- Three.js Background Shader ---
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: false });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const vertexShader = `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 1.0);
+                }
+            `;
+
+            const fragmentShader = `
+                uniform float time;
+                uniform vec2 mouse;
+                uniform vec2 resolution;
+                uniform float scrollProgress;
+                varying vec2 vUv;
+
+                float hash(vec2 p) {
+                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+                }
+
+                float noise(vec2 p) {
+                    vec2 i = floor(p);
+                    vec2 f = fract(p);
+                    f = f * f * (3.0 - 2.0 * f);
+                    float a = hash(i);
+                    float b = hash(i + vec2(1.0, 0.0));
+                    float c = hash(i + vec2(0.0, 1.0));
+                    float d = hash(i + vec2(1.0, 1.0));
+                    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+                }
+
+                float fbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.5;
+                    for(int i = 0; i < 5; i++) {
+                        v += noise(p) * a;
+                        p *= 2.0;
+                        a *= 0.5;
+                    }
+                    return v;
+                }
+
+                void main() {
+                    vec2 uv = vUv;
+                    vec2 aspect = vec2(resolution.x / resolution.y, 1.0);
+                    vec2 p = uv * 2.2;
+
+                    // Smooth organic fluid drift & domain warping
+                    float t = time * 0.30;
+                    p.x += sin(t * 0.6 + p.y * 1.2) * 0.15 + t * 0.4;
+                    p.y += cos(t * 0.5 + p.x * 1.0) * 0.15 + t * 0.3;
+
+                    vec2 q = vec2(
+                        fbm(p + vec2(t * 0.2, t * 0.15)),
+                        fbm(p + vec2(t * -0.15, t * 0.25))
+                    );
+
+                    float n1 = fbm(p + q * 0.8 + t * 0.08);
+                    float n2 = fbm(p * 1.6 - q * 0.6 - t * 0.06);
+                    float pattern = mix(n1, n2, 0.55);
+
+                    // Palette
+                    vec3 deep = vec3(0.043, 0.031, 0.071);      // #0B0812
+                    vec3 mid = vec3(0.110, 0.000, 0.196);       // #1C0032
+                    vec3 primary = vec3(0.620, 0.137, 1.000);   // #9E23FF
+                    vec3 highlight = vec3(0.702, 0.302, 1.000); // #B34DFF
+                    vec3 accent = vec3(0.900, 0.306, 0.847);    // #FF4ED8 (Neon Pink)
+
+                    vec3 col = mix(deep, mid, pattern);
+                    col = mix(col, primary, smoothstep(0.40, 0.85, pattern) * 0.25);
+                    col = mix(col, highlight, smoothstep(0.70, 1.0, pattern) * 0.20);
+
+                    float vignette = 1.0 - length(uv - 0.5) * 0.9;
+                    col *= vignette;
+                    
+                    vec2 m = vec2(mouse.x / resolution.x, 1.0 - mouse.y / resolution.y);
+                    vec2 m_dist = (uv - m) * aspect;
+                    float dist = length(m_dist);
+                    float glow = exp(-dist * 60.0) * 0.2;
+                    float core = exp(-dist * 100.0);
+                    float ripple = sin(dist * 20.0 - time * 2.5) * exp(-dist * 10.0);
+
+                    vec3 mouseColor = primary * glow + accent * core + highlight * ripple * 0.18;
+                    col += mouseColor;
+
+                    col += primary * 0.03 * (0.5 + 0.5 * sin(time + uv.y * 8.0));
+                    col = pow(col, vec3(1.08));
+
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            const uniforms = {
+                time: { value: 0 },
+                resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                mouse: { value: new THREE.Vector2(window.innerWidth/2, window.innerHeight/2) },
+                scrollProgress: { value: 0 }
+            };
+
+            const material = new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader,
+                uniforms,
+                depthWrite: false,
+                depthTest: false
+            });
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            document.addEventListener('mousemove', (e) => {
+                uniforms.mouse.value.set(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                uniforms.scrollProgress.value = maxScroll > 0 ? scrollY / maxScroll : 0;
+            });
+
+            window.addEventListener('resize', () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+            });
+
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                uniforms.time.value = clock.getElapsedTime();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+        });
+    </script>
 </body>
 </html>
